@@ -200,6 +200,7 @@ function envi_to_hdf5(
     bilpath::String,
     bilhdr::String,
     lcfpath::String,
+    timespath::String,
     specpath::String,
     spechdr::String,
     outpath::String,
@@ -213,6 +214,7 @@ function envi_to_hdf5(
         rad = create_group(g, "radiance")
         down = create_group(g, "downwelling")
         lcf = create_group(g, "lcf")
+        times = create_group(g, "times")
 
         # use let block to keep img from persisting
         let
@@ -241,6 +243,7 @@ function envi_to_hdf5(
 
         lcf["lcf"] = readdlm(lcfpath, '\t', Float64)
 
+        times["times"] = readdlm(timespath, ',', Float64)
     end
 end
 

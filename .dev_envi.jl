@@ -53,13 +53,14 @@ get_envi_params(spec_dict)
 @benchmark read_envi_file(bil_path, bil_hdr)     # ~750 ms
 @benchmark read_envi_file(spec_path, spec_hdr)   # ~550 μs
 
-envi_to_hdf5(bil_path, bil_hdr, bil_lcf, spec_path, spec_hdr, joinpath(outpath, "NoDye_1-1.h5"))
+envi_to_hdf5(bil_path, bil_hdr, bil_lcf, bil_times, spec_path, spec_hdr, joinpath(outpath, "NoDye_1-1.h5"))
 
 
 
 test_h5 = h5open(joinpath(outpath, "NoDye_1-1.h5"), "r")
 
-read(test_h5["raw/downwelling"], "wavelengths")
-read(test_h5["raw/radiance"], "wavelengths")
 
 close(test_h5)
+
+
+
