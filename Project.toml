@@ -1,0 +1,13 @@
+name = "RobotTeam"
+uuid = "56130bbd-e6be-4ba2-b891-a222d1dfc0bd"
+authors = ["John Waczak <john.louis.waczak@gmail.com>"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.9"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
