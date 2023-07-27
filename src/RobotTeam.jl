@@ -11,5 +11,10 @@ export get_envi_params
 export read_envi_file
 export envi_to_hdf5
 
+include("Georectification/Georectification.jl")
+using .Georectification
+
+export generateReflectance!
+
 
 end
