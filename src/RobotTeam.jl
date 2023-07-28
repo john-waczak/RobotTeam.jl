@@ -15,6 +15,6 @@ include("Georectification/Georectification.jl")
 using .Georectification
 
 export generateReflectance!
-
+export generateDerivedMetrics!
 
 end

@@ -50,8 +50,8 @@ get_envi_params(spec_dict)
 
 
 # 4. read the envi file
-@benchmark read_envi_file(bil_path, bil_hdr)     # ~750 ms
-@benchmark read_envi_file(spec_path, spec_hdr)   # ~550 μs
+# @benchmark read_envi_file(bil_path, bil_hdr)     # ~750 ms
+# @benchmark read_envi_file(spec_path, spec_hdr)   # ~550 μs
 
 envi_to_hdf5(bil_path, bil_hdr, bil_lcf, bil_times, spec_path, spec_hdr, joinpath(outpath, "NoDye_1-1.h5"))
 

@@ -11,7 +11,10 @@ test_file = joinpath(basepath, "NoDye_1-1.h5")
 
 generateReflectance!(test_file)
 
+generateDerivedMetrics!(test_file)
 
 h5 = h5open(test_file, "r")
 close(h5)
+
+
 
