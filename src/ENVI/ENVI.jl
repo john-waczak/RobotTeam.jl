@@ -243,7 +243,9 @@ function envi_to_hdf5(
 
         lcf["lcf"] = readdlm(lcfpath, '\t', Float64)
 
-        times["times"] = readdlm(timespath, ',', Float64)
+        ts =  readdlm(timespath, ',', Float64)
+
+        times["times"] = ts .- ts[1]  # assume .lcf and .times start at the same time
     end
 end
 
