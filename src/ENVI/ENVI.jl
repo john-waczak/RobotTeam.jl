@@ -346,16 +346,17 @@ function envi_to_hdf5(
         println("\treading flight data")
         lcf_data = readdlm(lcfpath, '\t', Float64)
 
-        lcf["roll"] = lcf_data[:,2]
-        lcf["pitch"] = lcf_data[:,3]
-        lcf["heading"] = lcf_data[:,4]
-        lcf["longitude"] = lcf_data[:,5]
-        lcf["latitude"] = lcf_data[:,6]
-        lcf["altitude"] = lcf_data[:,7]
+        lon  = lcf_data[:,5]
+        lat = lcf_data[:,6]
+        alt = lcf_data[:,7]
+
+        lcf["longitude"] = lon
+        lcf["latitude"] = lat
+        lcf["altitude"] = alt
 
         # generate x,y,z positions in
         println("\tconstructing local coordinates")
-        X_lla = LLA.(lcf_data[:,6], lcf_data[:,5], lcf_data[:,7])
+        X_lla = LLA.(lat, lon, alt)
         utmzs = [UTMZ(xlla, wgs84) for xlla ∈ X_lla]
 
         # position in meters in wgs84 UTMZ ellipsoid
@@ -364,6 +365,22 @@ function envi_to_hdf5(
         lcf["z"] = [utmz.z for utmz ∈ utmzs]
         lcf["isnorth"] = [utmz.isnorth for utmz ∈ utmzs]
         lcf["zone"] = [utmz.zone for utmz ∈ utmzs]
+
+
+        # apply corrections to orientation data
+        utm_zones = range(-180, stop=180, step=6)  # utm zones are every 6 degrees
+
+        # heading adjustment due to convergence of lines of longitude
+        # towards the poles
+        zones = [utm_zones[utmz.zone] for utmz ∈ utmzs]
+        Δ = atan.(tand.(lon .- (zones .+ 3.0)).*sind.(lat))
+
+        heading_correct = lcf_data[:,4]  .- Δ  # <-- this is what's used in the paper by Muller
+        # final assignments
+        lcf["roll"] = -lcf_data[:,2]  # <-- due to opposite convention used by GPS
+        lcf["pitch"] = lcf_data[:,3]
+        lcf["heading"] = heading_correct
+
 
         # now we compute the times as measured by the IMU in seconds
         # NOTE: this sensor uses the weird gps time which measures
@@ -382,6 +399,8 @@ function envi_to_hdf5(
         times["times"] = ts .- ts[1]  # assume .lcf and .times start at the same time
     end
 end
+
+
 
 
 end
