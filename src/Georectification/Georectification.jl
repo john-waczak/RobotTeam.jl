@@ -8,5 +8,4 @@ include("reflectance.jl")
 export generateReflectance!
 export generateDerivedMetrics!
 
-
 end

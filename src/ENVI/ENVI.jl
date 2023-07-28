@@ -5,6 +5,9 @@
 module ENVI
 using HDF5
 using DelimitedFiles
+using Geodesy
+using Dates
+
 
 export FileNotAnEnviHeader
 export EnviHeaderParsingError
@@ -12,6 +15,8 @@ export read_envi_header
 export get_envi_params
 export read_envi_file
 export envi_to_hdf5
+
+
 
 
 envi_to_dtype = Dict(
@@ -191,6 +196,95 @@ end
 
 
 
+
+
+
+
+"""
+    function leap_count(year::Int)
+
+Determine the number of leap seconds introduced before the given date. See the links below:
+- [Stack Overflow Post](https://stackoverflow.com/questions/33415475/how-to-get-current-date-and-time-from-gps-unsegment-time-in-python)
+- [Official Leap Seconds Table](https://hpiers.obspm.fr/eop-pc/index.php?index=TAI-UTC_tab&lang=en)
+"""
+function leap_count(year::Int)
+    leap_years =[1980,
+                 1981,
+                 1982,
+                 1983,
+                 1985,
+                 1988,
+                 1990,
+                 1991,
+                 1992,
+                 1993,
+                 1994,
+                 1996,
+                 1997,
+                 1999,
+                 2006,
+                 2009,
+                 2012,
+                 2015,
+                 2017,
+                 ];
+
+    leap_secs = [19,
+                 20,
+                 21,
+                 22,
+                 23,
+                 24,
+                 25,
+                 26,
+                 27,
+                 28,
+                 29,
+                 30,
+                 31,
+                 32,
+                 33,
+                 34,
+                 35,
+                 36,
+                 37,];
+
+
+    idx = findfirst(year .< leap_years)
+    if idx == nothing
+        return leap_secs[end]
+    else
+        return leap_secs[idx - 1]
+    end
+
+end
+
+
+"""
+    function gpsToUTC(gps_sec, year)
+
+Given the gps_time in seconds and the current year, return the UTC time accounting for leap seconds. See this [Stack Overflow Post](https://stackoverflow.com/questions/33415475/how-to-get-current-date-and-time-from-gps-unsegment-time-in-python) for more details.
+"""
+function gpsToUTC(gps_sec, year)
+    sec = round(gps_sec)
+    ms = (gps_sec - sec)
+    # convert to DateTime object
+    sec = Second(Int(sec))
+    ms = Millisecond(Int(round(1000*ms, digits=0)))
+
+    gps = sec + ms
+
+    utc = DateTime(1980, 1, 6) + (gps - Second(leap_count(year) - leap_count(1980)) )
+end
+
+
+
+
+
+
+
+
+
 """
     envi_to_hdf5(fpath::String, hdrpath::String, lcfpath::outpath::String)
 
@@ -203,11 +297,14 @@ function envi_to_hdf5(
     timespath::String,
     specpath::String,
     spechdr::String,
-    outpath::String,
+    outpath::String;
     )
 
+    # assume year is 2019 and overwrite with year from hdr file
+    year = 2019
 
     h5open(outpath, "cw") do fid
+        println("\tcreating groups")
         g = create_group(fid, "raw")
 
         # create subgroups for each data set type
@@ -218,7 +315,11 @@ function envi_to_hdf5(
 
         # use let block to keep img from persisting
         let
+            println("\treading radiance")
             img, h, p = read_envi_file(bilpath, bilhdr)
+
+            year = parse(Int, split(split(p["timestamp"], "-")[1], "/")[end])
+            println("\tyear taken: $(year)")
 
             # write the envi radiance data
             rad["radiance", chunk=(p["nbands"], 1, 1)] = img
@@ -231,6 +332,7 @@ function envi_to_hdf5(
         end
 
         let
+            println("\treading downwelling irradiance")
             spec, hspec, pspec = read_envi_file(specpath, spechdr)
             # write the downwelling irradiance
             down["irradiance"] = spec
@@ -241,8 +343,40 @@ function envi_to_hdf5(
             end
         end
 
-        lcf["lcf"] = readdlm(lcfpath, '\t', Float64)
+        println("\treading flight data")
+        lcf_data = readdlm(lcfpath, '\t', Float64)
 
+        lcf["roll"] = lcf_data[:,2]
+        lcf["pitch"] = lcf_data[:,3]
+        lcf["heading"] = lcf_data[:,4]
+        lcf["longitude"] = lcf_data[:,5]
+        lcf["latitude"] = lcf_data[:,6]
+        lcf["altitude"] = lcf_data[:,7]
+
+        # generate x,y,z positions in
+        println("\tconstructing local coordinates")
+        X_lla = LLA.(lcf_data[:,6], lcf_data[:,5], lcf_data[:,7])
+        utmzs = [UTMZ(xlla, wgs84) for xlla ∈ X_lla]
+
+        # position in meters in wgs84 UTMZ ellipsoid
+        lcf["x"] = [utmz.x for utmz ∈ utmzs]
+        lcf["y"] = [utmz.y for utmz ∈ utmzs]
+        lcf["z"] = [utmz.z for utmz ∈ utmzs]
+        lcf["isnorth"] = [utmz.isnorth for utmz ∈ utmzs]
+        lcf["zone"] = [utmz.zone for utmz ∈ utmzs]
+
+        # now we compute the times as measured by the IMU in seconds
+        # NOTE: this sensor uses the weird gps time which measures
+        # seconds since Jan 6th 1980 without accounting for leap year
+        # see above function notes for more details.
+        ts = lcf_data[:,1]
+        lcf["start-time"] = Dates.format(gpsToUTC(ts[1], year), "yyyy-mm-ddTHH:MM:SS.sss")
+        lcf["times"] = ts .- ts[1]  # so that we start at t=0.0
+
+
+        # now save corresponding scanline times from the .times file
+        # these come from the camera, not the IMU
+        println("\tsaving times")
         ts =  readdlm(timespath, ',', Float64)
 
         times["times"] = ts .- ts[1]  # assume .lcf and .times start at the same time
