@@ -14,6 +14,7 @@ generateReflectance!(test_file)
 generateDerivedMetrics!(test_file)
 
 h5 = h5open(test_file, "r")
+
 close(h5)
 
 

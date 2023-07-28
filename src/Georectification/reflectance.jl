@@ -460,5 +460,16 @@ function generateDerivedMetrics!(h5path::String)
             println("\tsaving TCARI")
             metrics["TCARI"] = TCARI
         end
+
+
+        # Sum the radiance
+        let
+            println("\tsaving Σrad")
+            rad = read(h5["raw/radiance/radiance"])
+            metrics["Σrad"] = sum(rad, dims=1)[1,:,:]
+        end
+
     end
 end
+
+
