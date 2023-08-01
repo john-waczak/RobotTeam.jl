@@ -8,6 +8,9 @@ end
 
 
 """
+    generateCoords!(h5::HDF5.File; θ_view = 30.8, z_ground = 292.0, isflipped=false)
+
+Given HSI data stored in an HDF5 file `h5`, georectify the image to produce coordinates for each pixel using position and orientation data from the IMU. This method assumes a flat ground at height `z_ground`. Additionally, the user should specify the viewing angle for their imager in degrees with `θ_view`. Finally, twiddle the witch `isflipped` to deal with potential mix-match
 """
 function generateCoords!(h5::HDF5.File; θ_view = 30.8, z_ground = 292.0, isflipped=false)
     nbands = read(h5["raw/radiance/nbands"])  # number of wavelength bins
@@ -52,8 +55,8 @@ function generateCoords!(h5::HDF5.File; θ_view = 30.8, z_ground = 292.0, isflip
     ts = read(h5["raw/lcf/times"])
 
     # read other UTMZ information
-    isnorth = read(h5["raw/lcf/isnorth"])
-    zone = read(h5["raw/lcf/zone"])
+    isnorth = read(h5["raw/lcf/isnorth"])[1]
+    zone = read(h5["raw/lcf/zone"])[1]
 
 
     # now we should be able to go through each scanline and compute the updated coordinates...
@@ -76,6 +79,18 @@ function generateCoords!(h5::HDF5.File; θ_view = 30.8, z_ground = 292.0, isflip
         # update pixel times
         pixelTimes[line,:] .= ts[line]
 
+        for j ∈ axes(pixelCoords,3)
+            r = LLAfromUTMZ(wgs84)(UTMZ(
+                pixelCoords[1,line,j],
+                pixelCoords[2,line,j],
+                pixelCoords[3,line,j],
+                zone,
+                isnorth
+            ))
+
+            pixelLongitudes[line,j] = r.lon
+            pixelLatitudes[line,j] = r.lat
+        end
     end
 
     # now we can add new data to the h5 file
@@ -90,6 +105,12 @@ function generateCoords!(h5::HDF5.File; θ_view = 30.8, z_ground = 292.0, isflip
     g["heading"] = viewingGeom[3,:,:]
 
     g["times"] = pixelTimes[:,:]
+
+    # generate lat lon grid
+    g["longitude"] = pixelLongitudes
+    g["latitude"] = pixelLatitudes
+
+    # generate triangle mesh indices
 
 end
 

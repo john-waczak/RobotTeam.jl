@@ -3,6 +3,8 @@ module Georectification
 using HDF5
 using StaticArrays
 using LinearAlgebra
+using Geodesy
+
 
 include("reflectance.jl")
 export generateReflectance!

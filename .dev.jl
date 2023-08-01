@@ -60,10 +60,10 @@ generateDerivedMetrics!(h5)
 generateCoords!(h5, θ_view=30.8, z_ground=292.0, isflipped=true)
 
 
+# update generateCoords to convert utmz back into lat/lon
 
-
+h5
 close(h5)
-
 
 
 
