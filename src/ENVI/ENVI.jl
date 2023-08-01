@@ -7,7 +7,7 @@ using HDF5
 using DelimitedFiles
 using Geodesy
 using Dates
-
+using DataInterpolations
 
 export FileNotAnEnviHeader
 export EnviHeaderParsingError
@@ -303,104 +303,140 @@ function envi_to_hdf5(
     # assume year is 2019 and overwrite with year from hdr file
     year = 2019
 
-    h5open(outpath, "cw") do fid
-        println("\tcreating groups")
-        g = create_group(fid, "raw")
+    fid = h5open(outpath, "w")
 
-        # create subgroups for each data set type
-        rad = create_group(g, "radiance")
-        down = create_group(g, "downwelling")
-        lcf = create_group(g, "lcf")
-        times = create_group(g, "times")
+    println("\tcreating groups")
+    g = create_group(fid, "raw")
 
-        # use let block to keep img from persisting
-        let
-            println("\treading radiance")
-            img, h, p = read_envi_file(bilpath, bilhdr)
+    # create subgroups for each data set type
+    rad = create_group(g, "radiance")
+    down = create_group(g, "downwelling")
+    lcf = create_group(g, "lcf")
+    times = create_group(g, "times")
 
-            year = parse(Int, split(split(p["timestamp"], "-")[1], "/")[end])
-            println("\tyear taken: $(year)")
+    # use let block to keep img from persisting
+    let
+        println("\treading radiance")
+        img, h, p = read_envi_file(bilpath, bilhdr)
 
-            # write the envi radiance data
-            rad["radiance", chunk=(p["nbands"], 1, 1)] = img
-            # rad["wavelengths"] = parse.(Float64, h["wavelength"])
-            for (key, val) ∈ p
-                if key != "dtype"
-                    rad[key] = val
-                end
+        year = parse(Int, split(split(p["timestamp"], "-")[1], "/")[end])
+        println("\tyear taken: $(year)")
+
+        # write the envi radiance data
+        rad["radiance", chunk=(p["nbands"], 1, 1)] = img
+        # rad["wavelengths"] = parse.(Float64, h["wavelength"])
+        for (key, val) ∈ p
+            if key != "dtype"
+                rad[key] = val
             end
         end
-
-        let
-            println("\treading downwelling irradiance")
-            spec, hspec, pspec = read_envi_file(specpath, spechdr)
-            # write the downwelling irradiance
-            down["irradiance"] = spec
-            for (key, val) ∈ pspec
-                if key != "dtype"
-                    down[key] = val
-                end
-            end
-        end
-
-        println("\treading flight data")
-        lcf_data = readdlm(lcfpath, '\t', Float64)
-
-        lon  = lcf_data[:,5]
-        lat = lcf_data[:,6]
-        alt = lcf_data[:,7]
-
-        lcf["longitude"] = lon
-        lcf["latitude"] = lat
-        lcf["altitude"] = alt
-
-        # generate x,y,z positions in
-        println("\tconstructing local coordinates")
-        X_lla = LLA.(lat, lon, alt)
-        utmzs = [UTMZ(xlla, wgs84) for xlla ∈ X_lla]
-
-        # position in meters in wgs84 UTMZ ellipsoid
-        lcf["x"] = [utmz.x for utmz ∈ utmzs]
-        lcf["y"] = [utmz.y for utmz ∈ utmzs]
-        lcf["z"] = [utmz.z for utmz ∈ utmzs]
-        lcf["isnorth"] = [utmz.isnorth for utmz ∈ utmzs]
-        lcf["zone"] = [utmz.zone for utmz ∈ utmzs]
-
-
-        # apply corrections to orientation data
-        utm_zones = range(-180, stop=180, step=6)  # utm zones are every 6 degrees
-
-        # heading adjustment due to convergence of lines of longitude
-        # towards the poles
-        zones = [utm_zones[utmz.zone] for utmz ∈ utmzs]
-        Δ = atan.(tand.(lon .- (zones .+ 3.0)).*sind.(lat))
-
-        heading_correct = lcf_data[:,4]  .- Δ  # <-- this is what's used in the paper by Muller
-        # final assignments
-        lcf["roll"] = -lcf_data[:,2]  # <-- due to opposite convention used by GPS
-        lcf["pitch"] = lcf_data[:,3]
-        lcf["heading"] = heading_correct
-
-
-        # now we compute the times as measured by the IMU in seconds
-        # NOTE: this sensor uses the weird gps time which measures
-        # seconds since Jan 6th 1980 without accounting for leap year
-        # see above function notes for more details.
-        ts = lcf_data[:,1]
-        lcf["start-time"] = Dates.format(gpsToUTC(ts[1], year), "yyyy-mm-ddTHH:MM:SS.sss")
-        lcf["times"] = ts .- ts[1]  # so that we start at t=0.0
-
-
-        # now save corresponding scanline times from the .times file
-        # these come from the camera, not the IMU
-        println("\tsaving times")
-        ts =  readdlm(timespath, ',', Float64)
-
-        times["times"] = ts .- ts[1]  # assume .lcf and .times start at the same time
     end
+
+    let
+        println("\treading downwelling irradiance")
+        spec, hspec, pspec = read_envi_file(specpath, spechdr)
+        # write the downwelling irradiance
+        down["irradiance"] = spec
+        for (key, val) ∈ pspec
+            if key != "dtype"
+                down[key] = val
+            end
+        end
+    end
+
+
+    # save the pixel times from the times file
+    println("\tsaving times")
+    pixel_ts =  vec(readdlm(timespath, ',', Float64))
+    pixel_ts =  pixel_ts .- pixel_ts[1] # assume .lcf and .times start at the same time (t=0.0 s)
+    times["times"] = pixel_ts
+
+
+
+    println("\treading flight data")
+    lcf_data = readdlm(lcfpath, '\t', Float64)
+
+    lcf_ts = @view lcf_data[:,1]
+    lcf["start-time"] = Dates.format(gpsToUTC(lcf_ts[1], year), "yyyy-mm-ddTHH:MM:SS.sss")
+    lcf_times = lcf_ts .- lcf_ts[1]  # so that we start at t=0.0
+    lcf["times"] = pixel_ts
+
+    println("\tinterpolating LCF times to match pixel times")
+
+    println("\t\tlongitudes")
+    lon  = @view lcf_data[:,5]
+    lon_interp = CubicSpline(lon, lcf_times)
+    lcf["longitude"] = lon_interp.(pixel_ts)
+
+    println("\t\tlatitudes")
+    lat = @view lcf_data[:,6]
+    lat_interp = CubicSpline(lat, lcf_times)
+    lcf["latitude"] = lat_interp.(pixel_ts)
+
+
+    println("\t\taltitudes")
+    alt = @view lcf_data[:,7]
+    alt_interp = CubicSpline(alt, lcf_times)
+    lcf["altitude"] = alt_interp.(pixel_ts)
+
+
+    # generate x,y,z positions in
+    println("\t\tconstructing local UTM coordinates")
+    X_lla = LLA.(lat, lon, alt)
+    utmzs = [UTMZ(xlla, wgs84) for xlla ∈ X_lla]
+
+    let
+        println("\t\troll")
+        roll = -1.0 .*  @view lcf_data[:,2]  # <-- due to opposite convention used by GPS
+        roll_interp = CubicSpline(roll, lcf_times)
+        lcf["roll"] = roll_interp.(pixel_ts)
+    end
+
+    let
+        println("\t\tpitch")
+        pitch = @view lcf_data[:,3]
+        pitch_interp = CubicSpline(pitch, lcf_times)
+        lcf["pitch"] = pitch_interp.(pixel_ts)
+    end
+
+    let
+        println("\t\theading")
+        heading = @view lcf_data[:,4]
+        heading_interp = CubicSpline(heading, lcf_times)
+        lcf["heading"] = heading_interp.(pixel_ts)
+    end
+
+    let
+        println("\t\tutm x")
+        lcf_x = [utmz.x for utmz ∈ utmzs]
+        x_interp = CubicSpline(lcf_x, lcf_times)
+        lcf["x"] = x_interp.(pixel_ts)
+    end
+
+    let
+        println("\t\tutm y")
+        lcf_y = [utmz.y for utmz ∈ utmzs]
+        y_interp = CubicSpline(lcf_y, lcf_times)
+        lcf["y"] = y_interp.(pixel_ts)
+    end
+
+    let
+        println("\t\tutm z")
+        lcf_z = [utmz.z for utmz ∈ utmzs]
+        z_interp = CubicSpline(lcf_z, lcf_times)
+        lcf["z"] = z_interp.(pixel_ts)
+    end
+
+
+    lcf_isnorth = [utmz.isnorth for utmz ∈ utmzs]
+    lcf_zone = [utmz.zone for utmz ∈ utmzs]
+
+    lcf["isnorth"] = [lcf_isnorth[1] for _ ∈ 1:length(pixel_ts)]
+    lcf["zone"] = [lcf_zone[1] for _ ∈ 1:length(pixel_ts)]
+
+
+    return fid
 end
-
-
 
 
 end

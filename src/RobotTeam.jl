@@ -16,5 +16,7 @@ using .Georectification
 
 export generateReflectance!
 export generateDerivedMetrics!
+export generateCoords!
+
 
 end
