@@ -17,6 +17,10 @@ using .Georectification
 export generateReflectance!
 export generateDerivedMetrics!
 export generateCoords!
+export build_mesh
 
+
+include("visualization.jl")
+export process_image
 
 end

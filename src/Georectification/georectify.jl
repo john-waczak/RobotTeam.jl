@@ -7,6 +7,7 @@ function Rotation(ϕ,θ,ψ)
 end
 
 
+
 """
     generateCoords!(h5::HDF5.File; θ_view = 30.8, z_ground = 292.0, isflipped=false)
 
@@ -60,13 +61,19 @@ function generateCoords!(h5::HDF5.File; θ_view = 30.8, z_ground = 292.0, isflip
 
 
     # now we should be able to go through each scanline and compute the updated coordinates...
+
+    pxTmp = copy(pixelCoords[:,1,:])
+
     Threads.@threads for line ∈ axes(pixelCoords,2)
         # compute scale factor
-        s = (droneCoords[3,line]-z_ground)/focal_length
-        # s = (droneCoords[3,line]-z_ground)*tand(θ_view/2)/focal_length
+        #s = (droneCoords[3,line]-z_ground)/focal_length
+        s = (droneCoords[3,line]-z_ground)/(focal_length*cos(θ[line]))
 
         # apply rotation matrix
-        mul!(pixelCoords[:,line,:], Rotation(ϕ[line], θ[line], ψ[line]), pixelCoords[:,line,:])
+        mul!(pxTmp, Rotation(ϕ[line], θ[line], ψ[line]), pixelCoords[:,line,:])
+        pixelCoords[:,line,:] .= pxTmp
+
+        # pixelCoords[:,line,:] .= Rotation(ϕ[line], θ[line], ψ[line]) .* pixelCoords[:,line,:]
 
         # scale result to ground scale and shift by drone position
         pixelCoords[:,line,:] .= s .* pixelCoords[:,line,:] .+ droneCoords[:,line]
@@ -109,8 +116,5 @@ function generateCoords!(h5::HDF5.File; θ_view = 30.8, z_ground = 292.0, isflip
     # generate lat lon grid
     g["longitude"] = pixelLongitudes
     g["latitude"] = pixelLatitudes
-
-    # generate triangle mesh indices
-
 end
 

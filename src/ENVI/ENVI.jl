@@ -54,8 +54,8 @@ end
 struct EnviHeaderParsingError <: Exception
 end
 
-Base.showerror(io::IO, e::FileNotAnEnviHeader) = print(io, e.file, " does not appear to be an ENVI header.")
-Base.showerror(io::IO, e::FileNotAnEnviHeader) = print(io, "failed to parse ENVI header file.")
+# Base.showerror(io::IO, e::FileNotAnEnviHeader) = print(io, e.file, " does not appear to be an ENVI header.")
+# Base.showerror(io::IO, e::FileNotAnEnviHeader) = print(io, "failed to parse ENVI header file.")
 
 
 
