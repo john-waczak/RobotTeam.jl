@@ -16,8 +16,7 @@ export get_envi_params
 export read_envi_file
 export envi_to_hdf5
 
-
-
+export FlightData, nscans, HyperspectralImage
 
 envi_to_dtype = Dict(
     "1" => UInt8,
@@ -170,19 +169,19 @@ function read_envi_file(fpath::String, hdrpath::String)
     p = get_envi_params(h)
     inter = h["interleave"]
 
-    # change to bip for all as it will be most memory efficient when looping
     if inter == "bil" || inter == "BIL"
         img = Array{p["dtype"]}(undef, p["ncols"], p["nbands"], p["nrows"])
         read!(fpath, img)
-        # img = PermutedDimsArray(img, (2,1,3))
-        img = permutedims(img, (2,1,3))
+        img = PermutedDimsArray(img, (2,1,3))
+        # img = permutedims(img, (2,1,3))
     elseif inter == "bip" || inter == "BIP"
         img = Array{p["dtype"]}(undef, p["nbands"], p["ncols"], p["nrows"])
         read!(fpath, img)
-    else
+    else  # BSQ
         img = Array{p["dtype"]}(undef, p["ncols"], p["nrows"], p["nbands"])
-        # img = PermutedDimsArray(img, (3,1,2))
-        img = permutedims(img, (3,1,2))
+        read!(fpath, img)
+        img = PermutedDimsArray(img, (3,1,2))
+        # img = permutedims(img, (3,1,2))
     end
 
     h["interleave"] = "bip"
@@ -434,6 +433,144 @@ function envi_to_hdf5(
 
     return fid
 end
+
+
+
+
+
+struct FlightData
+    start_time
+    times
+    longitudes
+    latitudes
+    altitudes
+    rolls
+    pitches
+    headings
+    xs
+    ys
+    zs
+    isnorth
+    zone
+end
+
+nscans(fd::FlightData) = length(fd.times)
+
+
+"""
+    FlightData(lcfpath::String, timespath::String)
+
+Parse `lcfpath` and `timespath` returning a struct containing all relevant flight information for each scanline in the hyper-spectral image.
+"""
+function FlightData(lcfpath::String, timespath::String; year=2020)
+    # 1. compute pixel times
+    pixel_ts =  vec(readdlm(timespath, ',', Float64))
+    pixel_ts =  pixel_ts .- pixel_ts[1] # assume .lcf and .times start at the same time (t=0.0 s)
+
+    # 2. read flight data
+    lcf_data = readdlm(lcfpath, '\t', Float64)
+
+    lcf_ts = @view lcf_data[:,1]
+    start_time = Dates.format(gpsToUTC(lcf_ts[1], year), "yyyy-mm-ddTHH:MM:SS.sss")
+    lcf_times = lcf_ts .- lcf_ts[1]  # so that we start at t=0.0
+
+    lon  = @view lcf_data[:,5]
+    lon_interp = CubicSpline(lon, lcf_times)
+    longitudes = lon_interp.(pixel_ts)
+
+    lat = @view lcf_data[:,6]
+    lat_interp = CubicSpline(lat, lcf_times)
+    latitudes = lat_interp.(pixel_ts)
+
+    alt = @view lcf_data[:,7]
+    alt_interp = CubicSpline(alt, lcf_times)
+    altitudes = alt_interp.(pixel_ts)
+
+    roll = -1.0 .*  @view lcf_data[:,2]  # <-- due to opposite convention used by GPS
+    roll_interp = CubicSpline(roll, lcf_times)
+    rolls = roll_interp.(pixel_ts)
+
+    pitch = @view lcf_data[:,3]
+    pitch_interp = CubicSpline(pitch, lcf_times)
+    pitches = pitch_interp.(pixel_ts)
+
+    heading = @view lcf_data[:,4]
+    heading_interp = CubicSpline(heading, lcf_times)
+    headings = heading_interp.(pixel_ts)
+
+
+    # 3. construct UTMZ coords
+    X_lla = LLA.(latitudes, longitudes, altitudes)
+    utmzs = [UTMZ(xlla, wgs84) for xlla ∈ X_lla]
+
+    xs = [utmz.x for utmz ∈ utmzs]
+    ys = [utmz.y for utmz ∈ utmzs]
+    zs = [utmz.z for utmz ∈ utmzs]
+
+    isnorth = utmzs[1]
+    zone = utmzs[1].zone
+
+    return FlightData(start_time, pixel_ts, longitudes, latitudes, altitudes, rolls, pitches, headings, xs, ys, zs, isnorth, zone)
+end
+
+
+
+
+struct HyperspectralImage{T}
+    # UTMz information
+    X::Array{Float64, 3}  # x,y,z
+    zone::UInt8
+    isnorth::Bool
+
+    # Lat/Lon
+    Latitudes::Matrix{Float64}
+    Longitudes::Matrix{Float64}
+
+    # Times Information
+    Times::Matrix{Float64}
+    start_time::DateTime
+
+    # Wavelength bins in nm
+    λs::Vector{Float64}
+
+
+    # Radiance
+    Radiance::Array{T,3}
+
+    # Reflectance
+    Reflectance::Array{Float64,3}
+end
+
+
+
+"""
+    HSI(k,m,n; rad_type=UInt16)
+
+Allocate an `HSI` struct with `k` wavelength bands, `m` scanlines and `n` pixels per line.
+"""
+function HyperspectralImage(k,m,n; rad_type=UInt16)
+    return HyperspectralImage(
+        zeros(3,m,n),                            # UTMz
+        UInt8(0),                                # zone
+        true,                                    # isnorth
+        zeros(m,n),                              # Latitudes
+        zeros(m,n),                              # Longitudes
+        zeros(m,n),                              # pixel times
+        DateTime(1999, 12, 31, 23, 59, 59),      # start time
+        zeros(k),                                # wavelengths
+        zeros(rad_type, k, m, n),                # Radiance
+        zeros(k, m, n),                       # Reflectance + Spectral Indices
+    )
+end
+
+
+
+
+
+
+# nrows(HSI) = HSI.nrows
+# ncols(HSI) = HSI.ncols
+# nbands(HSI) = HSI.nbands
 
 
 end

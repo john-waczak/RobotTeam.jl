@@ -24,6 +24,7 @@ MeshViz = "9ecf9c4f-6e5a-4b5e-83ae-06f2c7a661d8"
 Meshes = "eacbb407-ea5a-433e-ab97-5258b1ca43fa"
 MintsMakieRecipes = "6ebddb0b-cb6d-4cb8-921a-b084ea45d677"
 PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
+RelocatableFolders = "05181044-ff0b-4ac5-8273-598c1e38db00"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 TileProviders = "263fe934-28e1-4ae9-998a-c2629c5fede6"
 
