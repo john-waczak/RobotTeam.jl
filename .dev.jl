@@ -20,6 +20,7 @@ using Images, ImageContrastAdjustment
 include("utils/vis_tools.jl")
 
 
+
 # 1. set up test paths
 
 basepath = "/media/jwaczak/Data/robotteam-data/sample-hsi/Scotty_1-2"
@@ -46,25 +47,20 @@ h5 = envi_to_hdf5(paths..., h5path)
 
 generateReflectance!(h5)
 generateDerivedMetrics!(h5)
+generateRGB!(h5)
+
+
+# test color image:
+img = read(h5["raw/RGB/RGB"])
+cmk.image(rotr90(colorview(RGB, img)),
+          axis = (aspect = cmk.DataAspect(), yreversed=false,),
+          )
 
 
 #generateCoords!(h5, θ_view=30.8, z_ground=292.0, isflipped=true)
 generateCoords!(h5, θ_view=30.8, z_ground=292.0, isflipped=true)
 mesh, ∂mesh = build_mesh(read(h5["raw/georectified/longitude"]), read(h5["raw/georectified/latitude"]));
 
-λs = read(h5["raw/reflectance/wavelengths"])
-idx_r = argmin(abs.(λs .- 630.0))
-idx_g = argmin(abs.(λs .- 532.0))
-idx_b = argmin(abs.(λs .- 465.0))
-
-img = permutedims(read(h5["raw/reflectance/reflectance"])[[idx_r, idx_g, idx_b],:,:], (1,3,2))
-
-imgp = process_image(img)
-
-
-cmk.image(rotr90(colorview(RGB, imgp)),
-          axis = (aspect = cmk.DataAspect(), yreversed=false,),
-          )
 
 
 
@@ -93,7 +89,7 @@ cmk.ylims!(ax, 33.70075, 33.7035)
 
 f
 
-hsi = viz!(ax, mesh, color=vcat(colorview(RGB, imgp)...))
+hsi = viz!(ax, mesh, color=vcat(colorview(RGB, img)...))
 ∂hsi = viz!(ax, ∂mesh, color=:red)
 flightpath = cmk.lines!(ax, lon, lat, color=:white)
 
@@ -102,5 +98,7 @@ f
 save("test_georectification.png", f)
 
 
-
 close(h5)
+
+
+

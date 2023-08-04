@@ -1,7 +1,8 @@
 using ..ENVI: read_envi_file
+
 using DataInterpolations
 using LoopVectorization
-
+using Images
 
 
 function generateReflectance!(h5::HDF5.File; calibration_path::String="calibration")
@@ -464,7 +465,6 @@ function generateDerivedMetrics!(h5::HDF5.File)
         rad = read(h5["raw/radiance/radiance"])
         metrics["Σrad"] = sum(rad, dims=1)[1,:,:]
     end
-
 end
 
 

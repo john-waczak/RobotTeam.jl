@@ -41,9 +41,7 @@ struct BadENVIHeader <: Exception
     fname::AbstractString
 end
 
-Base.showerror(io::IO, e::BadENVIHeader) = print(io, e.fname, " does not appear to be an ENVI header.")
 Base.showerror(io::IO, e::BadENVIHeader) = print(io, "failed to parse ENVI header file.")
-
 
 
 # create custom error message for bad header files
@@ -54,8 +52,7 @@ end
 struct EnviHeaderParsingError <: Exception
 end
 
-# Base.showerror(io::IO, e::FileNotAnEnviHeader) = print(io, e.file, " does not appear to be an ENVI header.")
-# Base.showerror(io::IO, e::FileNotAnEnviHeader) = print(io, "failed to parse ENVI header file.")
+Base.showerror(io::IO, e::FileNotAnEnviHeader) = print(io, e.file, " does not appear to be an ENVI header.")
 
 
 

@@ -1,7 +1,7 @@
 module RobotTeam
 
-include("ENVI/ENVI.jl")
 
+include("ENVI/ENVI.jl")
 # ENVI.jl exports
 using .ENVI
 export FileNotAnEnviHeader
@@ -20,7 +20,15 @@ export generateCoords!
 export build_mesh
 
 
+# visualization tools
+
 include("visualization.jl")
-export process_image
+using .Visualization
+export process_image, generateRGB!, getRGB
+
+
+
+
+
 
 end
