@@ -14,6 +14,7 @@ function build_mesh(X, Y)
     tris = Vector{Connectivity}(undef, 2(m-1)*(n-1))
 
     q = 1
+#    for j ∈ 1:n, i ∈ 1:m
     for j ∈ 1:n, i ∈ 1:m
         #points[get_k(i,j,m,n)] = Point2(X[i,j], Y[i,j])
         points[get_k(i,j,m,n)] = Point2(X[get_k(i,j,m,n)], Y[get_k(i,j,m,n)])
@@ -32,10 +33,10 @@ function build_mesh(X, Y)
     mesh = SimpleMesh(points, tris)
 
     ∂mesh = Ring(
-        [mesh.vertices[get_k(i,1,m,n)] for i ∈ 1:m]...,
-        #    [mesh.vertices[get_k(m,j,m,n)] for j ∈ 1:n]...,
-        [mesh.vertices[get_k(i,n,m,n)] for i ∈ m:-1:1]...,
-        #    [mesh.vertices[get_k(1,j,m,n)] for j ∈ n:-1:2]...,
+        #[mesh.vertices[get_k(i,1,m,n)] for i ∈ 1:m]...,
+        [mesh.vertices[get_k(m,j,m,n)] for j ∈ 1:n]...,
+        #[mesh.vertices[get_k(i,n,m,n)] for i ∈ m:-1:1]...,
+        [mesh.vertices[get_k(1,j,m,n)] for j ∈ n:-1:1]...,
     )
 
     return mesh, ∂mesh

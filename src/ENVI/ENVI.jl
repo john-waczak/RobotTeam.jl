@@ -16,7 +16,7 @@ export get_envi_params
 export read_envi_file
 export envi_to_hdf5
 
-export FlightData, nscans, HyperspectralImage
+export FlightData, HyperspectralImage, nscanlines, nsamples, nbands
 
 envi_to_dtype = Dict(
     "1" => UInt8,
@@ -441,9 +441,6 @@ end
 struct FlightData
     start_time
     times
-    longitudes
-    latitudes
-    altitudes
     rolls
     pitches
     headings
@@ -474,18 +471,6 @@ function FlightData(lcfpath::String, timespath::String; year=2020)
     start_time = Dates.format(gpsToUTC(lcf_ts[1], year), "yyyy-mm-ddTHH:MM:SS.sss")
     lcf_times = lcf_ts .- lcf_ts[1]  # so that we start at t=0.0
 
-    lon  = @view lcf_data[:,5]
-    lon_interp = CubicSpline(lon, lcf_times)
-    longitudes = lon_interp.(pixel_ts)
-
-    lat = @view lcf_data[:,6]
-    lat_interp = CubicSpline(lat, lcf_times)
-    latitudes = lat_interp.(pixel_ts)
-
-    alt = @view lcf_data[:,7]
-    alt_interp = CubicSpline(alt, lcf_times)
-    altitudes = alt_interp.(pixel_ts)
-
     roll = -1.0 .*  @view lcf_data[:,2]  # <-- due to opposite convention used by GPS
     roll_interp = CubicSpline(roll, lcf_times)
     rolls = roll_interp.(pixel_ts)
@@ -498,19 +483,34 @@ function FlightData(lcfpath::String, timespath::String; year=2020)
     heading_interp = CubicSpline(heading, lcf_times)
     headings = heading_interp.(pixel_ts)
 
-
+    lon  = @view lcf_data[:,5]
+    lat = @view lcf_data[:,6]
+    alt = @view lcf_data[:,7]
     # 3. construct UTMZ coords
-    X_lla = LLA.(latitudes, longitudes, altitudes)
+    X_lla = LLA.(lat, lon, alt)
     utmzs = [UTMZ(xlla, wgs84) for xlla ∈ X_lla]
 
-    xs = [utmz.x for utmz ∈ utmzs]
-    ys = [utmz.y for utmz ∈ utmzs]
-    zs = [utmz.z for utmz ∈ utmzs]
+    # xs = [utmz.x for utmz ∈ utmzs]
+    lcf_x = [utmz.x for utmz ∈ utmzs]
+    x_interp = CubicSpline(lcf_x, lcf_times)
+    xs = x_interp.(pixel_ts)
 
-    isnorth = utmzs[1]
+    # ys = [utmz.y for utmz ∈ utmzs]
+    lcf_y = [utmz.y for utmz ∈ utmzs]
+    y_interp = CubicSpline(lcf_y, lcf_times)
+    ys = y_interp.(pixel_ts)
+
+    # zs = [utmz.z for utmz ∈ utmzs]
+    lcf_z = [utmz.z for utmz ∈ utmzs]
+    z_interp = CubicSpline(lcf_z, lcf_times)
+    zs = z_interp.(pixel_ts)
+
+
+
+    isnorth = utmzs[1].isnorth
     zone = utmzs[1].zone
 
-    return FlightData(start_time, pixel_ts, longitudes, latitudes, altitudes, rolls, pitches, headings, xs, ys, zs, isnorth, zone)
+    return FlightData(start_time, pixel_ts, rolls, pitches, headings, xs, ys, zs, isnorth, zone)
 end
 
 
@@ -519,26 +519,29 @@ end
 struct HyperspectralImage{T}
     # UTMz information
     X::Array{Float64, 3}  # x,y,z
-    zone::UInt8
-    isnorth::Bool
-
-    # Lat/Lon
-    Latitudes::Matrix{Float64}
-    Longitudes::Matrix{Float64}
+    zone::Vector{UInt8}
+    isnorth::Vector{Bool}
 
     # Times Information
     Times::Matrix{Float64}
-    start_time::DateTime
+    # start_time::Vector{}DateTime
 
     # Wavelength bins in nm
     λs::Vector{Float64}
-
 
     # Radiance
     Radiance::Array{T,3}
 
     # Reflectance
     Reflectance::Array{Float64,3}
+
+    # Viewing Geometry
+    Roll::Matrix{Float64}
+    Pitch::Matrix{Float64}
+    Heading::Matrix{Float64}
+
+    # Camera Geometry
+    ViewAngle::Matrix{Float64}
 end
 
 
@@ -551,15 +554,17 @@ Allocate an `HSI` struct with `k` wavelength bands, `m` scanlines and `n` pixels
 function HyperspectralImage(k,m,n; rad_type=UInt16)
     return HyperspectralImage(
         zeros(3,m,n),                            # UTMz
-        UInt8(0),                                # zone
-        true,                                    # isnorth
-        zeros(m,n),                              # Latitudes
-        zeros(m,n),                              # Longitudes
+        [UInt8(0)],                              # zone
+        [true],                                  # isnorth
         zeros(m,n),                              # pixel times
-        DateTime(1999, 12, 31, 23, 59, 59),      # start time
+        # DateTime(1999, 12, 31, 23, 59, 59),      # start time
         zeros(k),                                # wavelengths
         zeros(rad_type, k, m, n),                # Radiance
-        zeros(k, m, n),                       # Reflectance + Spectral Indices
+        zeros(k, m, n),                          # Reflectance + Spectral Indices
+        zeros(m, n),                             # Roll
+        zeros(m, n),                             # Pitch
+        zeros(m, n),                             # Heading
+        zeros(m, n),                             # Viewing Angle
     )
 end
 
@@ -568,9 +573,9 @@ end
 
 
 
-# nrows(HSI) = HSI.nrows
-# ncols(HSI) = HSI.ncols
-# nbands(HSI) = HSI.nbands
+nscanlines(hsi::HyperspectralImage) = size(hsi.Radiance, 3)
+nsamples(hsi::HyperspectralImage) = size(hsi.Radiance, 2)
+nbands(hsi::HyperspectralImage) = length(hsi.λs)
 
 
 end

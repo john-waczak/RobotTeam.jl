@@ -1,5 +1,7 @@
 module Visualization
 
+using ..ENVI: HyperspectralImage
+
 using Images
 using HDF5
 
@@ -51,6 +53,21 @@ end
 function getRGB(h5::HDF5.File)
     return colorview(RGB, read(h5["raw/RGB/RGB"]))
 end
+
+
+function getRGB(hsi::HyperspectralImage; λred=630.0, λgreen=532.0, λblue=465.0)
+    λs = hsi.λs
+    idx_r = argmin(abs.(λs .- λred))
+    idx_g = argmin(abs.(λs .- λgreen))
+    idx_b = argmin(abs.(λs .- λblue))
+
+    img = hsi.Reflectance[[idx_r, idx_g, idx_b], :, :]
+
+    imgp = process_image(img)
+
+    return colorview(RGB, imgp)
+end
+
 
 
 
