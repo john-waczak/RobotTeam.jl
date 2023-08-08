@@ -33,7 +33,7 @@ function generateReflectance!(hsi::HyperspectralImage, specpath, spechdr)
     adjustedSpec = interp.(hsi.λs)
 
     # compute reflectance values, clamping them to be ∈ [0, 1]
-    @turbo for λ ∈ axes(hsi.Radiance,1), i ∈ axes(hsi.Radiance,2), j ∈ axes(hsi.Radiance,3)
+    @tturbo for λ ∈ axes(hsi.Radiance,1), i ∈ axes(hsi.Radiance,2), j ∈ axes(hsi.Radiance,3)
         hsi.Reflectance[λ, i, j] = clamp(π * hsi.Radiance[λ, i, j] / adjustedSpec[λ], 0.0, 1.0)
     end
 end

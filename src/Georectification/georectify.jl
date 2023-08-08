@@ -73,7 +73,7 @@ function generateCoords!(hsi::HyperspectralImage,
 
 
     # loop through and set viewing angle
-    @turbo for i ∈ 1:N, j∈1:lines
+    @tturbo for i ∈ 1:N, j∈1:lines
         hsi.ViewAngle[i,j] = atan(rs_pixel_sensor[2,i], rs_pixel_sensor[3,i])
     end
 
@@ -144,11 +144,11 @@ function generateCoords!(h5::HDF5.File; θ_view = 30.8, z_ground = 292.0, isflip
 
     # loop through and set pixelCoordinates to coordinates in sensor frame
     if !isflipped
-        @turbo for k ∈ axes(pixelCoords,1), i ∈ axes(pixelCoords,2), j ∈ axes(pixelCoords,3)
+        @tturbo for k ∈ axes(pixelCoords,1), i ∈ axes(pixelCoords,2), j ∈ axes(pixelCoords,3)
             pixelCoords[k,i,j] = ifelse(k==1, 0, ifelse(k==2, -(N-1)/2 + (j - 1), focal_length))
         end
     else
-        @turbo for k ∈ axes(pixelCoords,1), i ∈ axes(pixelCoords,2), j ∈ axes(pixelCoords,3)
+        @tturbo for k ∈ axes(pixelCoords,1), i ∈ axes(pixelCoords,2), j ∈ axes(pixelCoords,3)
             pixelCoords[k,i,j] = ifelse(k==1, 0, ifelse(k==2, (N-1)/2 - (j - 1), focal_length))
         end
     end

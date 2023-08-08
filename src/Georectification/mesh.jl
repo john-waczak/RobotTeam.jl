@@ -32,12 +32,20 @@ function build_mesh(X, Y)
 
     mesh = SimpleMesh(points, tris)
 
-    ∂mesh = Ring(
+    # ∂mesh = Ring(
+    #     #[mesh.vertices[get_k(i,1,m,n)] for i ∈ 1:m]...,
+    #     [mesh.vertices[get_k(m,j,m,n)] for j ∈ 1:n]...,
+    #     #[mesh.vertices[get_k(i,n,m,n)] for i ∈ m:-1:1]...,
+    #     [mesh.vertices[get_k(1,j,m,n)] for j ∈ n:-1:1]...,
+    # )
+
+    ∂mesh = Ngon(
         #[mesh.vertices[get_k(i,1,m,n)] for i ∈ 1:m]...,
         [mesh.vertices[get_k(m,j,m,n)] for j ∈ 1:n]...,
         #[mesh.vertices[get_k(i,n,m,n)] for i ∈ m:-1:1]...,
         [mesh.vertices[get_k(1,j,m,n)] for j ∈ n:-1:1]...,
     )
+
 
     return mesh, ∂mesh
 end
