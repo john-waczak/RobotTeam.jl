@@ -16,7 +16,7 @@ export get_envi_params
 export read_envi_file
 export envi_to_hdf5
 
-export FlightData, HyperspectralImage, nscanlines, nsamples, nbands
+export FlightData, HyperspectralImage
 
 envi_to_dtype = Dict(
     "1" => UInt8,
@@ -468,7 +468,9 @@ function FlightData(lcfpath::String, timespath::String; year=2020)
     lcf_data = readdlm(lcfpath, '\t', Float64)
 
     lcf_ts = @view lcf_data[:,1]
-    start_time = Dates.format(gpsToUTC(lcf_ts[1], year), "yyyy-mm-ddTHH:MM:SS.sss")
+    # start_time = Date.format(gpsToUTC(lcf_ts[1], year), "yyyy-mm-ddTHH:MM:SS.sss")
+    # start_time = Date.format(gpsToUTC(lcf_ts[1], year), "yyyy-mm-ddTHH:MM:SS.sss")
+    start_time = gpsToUTC(lcf_ts[1], year)
     lcf_times = lcf_ts .- lcf_ts[1]  # so that we start at t=0.0
 
     roll = -1.0 .*  @view lcf_data[:,2]  # <-- due to opposite convention used by GPS
@@ -516,21 +518,22 @@ end
 
 
 
-struct HyperspectralImage{T}
+struct HyperspectralImage
     # UTMz information
     X::Array{Float64, 3}  # x,y,z
-    zone::Vector{UInt8}
-    isnorth::Vector{Bool}
+    zone::UInt8
+    isnorth::Bool
+
+    # Lat/Lon
+    Longitudes::Matrix{Float64}
+    Latitudes::Matrix{Float64}
 
     # Times Information
     Times::Matrix{Float64}
-    # start_time::Vector{}DateTime
+    start_time::DateTime
 
     # Wavelength bins in nm
     λs::Vector{Float64}
-
-    # Radiance
-    Radiance::Array{T,3}
 
     # Reflectance
     Reflectance::Array{Float64,3}
@@ -542,40 +545,12 @@ struct HyperspectralImage{T}
 
     # Camera Geometry
     ViewAngle::Matrix{Float64}
+
+    # Solar Geometry
+    SolarAzimuth::Matrix{Float64}
+    SolarElevation::Matrix{Float64}
+    SolarZenith::Matrix{Float64}
 end
-
-
-
-"""
-    HSI(k,m,n; rad_type=UInt16)
-
-Allocate an `HSI` struct with `k` wavelength bands, `m` scanlines and `n` pixels per line.
-"""
-function HyperspectralImage(k,m,n; rad_type=UInt16)
-    return HyperspectralImage(
-        zeros(3,m,n),                            # UTMz
-        [UInt8(0)],                              # zone
-        [true],                                  # isnorth
-        zeros(m,n),                              # pixel times
-        # DateTime(1999, 12, 31, 23, 59, 59),      # start time
-        zeros(k),                                # wavelengths
-        zeros(rad_type, k, m, n),                # Radiance
-        zeros(k, m, n),                          # Reflectance + Spectral Indices
-        zeros(m, n),                             # Roll
-        zeros(m, n),                             # Pitch
-        zeros(m, n),                             # Heading
-        zeros(m, n),                             # Viewing Angle
-    )
-end
-
-
-
-
-
-
-nscanlines(hsi::HyperspectralImage) = size(hsi.Radiance, 3)
-nsamples(hsi::HyperspectralImage) = size(hsi.Radiance, 2)
-nbands(hsi::HyperspectralImage) = length(hsi.λs)
 
 
 end

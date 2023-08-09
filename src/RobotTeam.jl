@@ -10,7 +10,7 @@ export read_envi_header
 export get_envi_params
 export read_envi_file
 export envi_to_hdf5
-export FlightData, HyperspectralImage, nscanlines, nsamples, nbands
+export FlightData, HyperspectralImage
 
 
 include("Georectification/Georectification.jl")
@@ -20,14 +20,13 @@ export generateReflectance!
 export generateDerivedMetrics!
 export generateCoords!
 export build_mesh
-
+export bump_to_nearest_Δx, get_new_bounds, get_resampled_grid
 
 # visualization tools
 
 include("visualization.jl")
 using .Visualization
 export process_image, generateRGB!, getRGB
-
 
 
 
