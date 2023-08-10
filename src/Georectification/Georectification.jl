@@ -8,6 +8,7 @@ using LinearAlgebra
 using Geodesy
 using Meshes
 using RelocatableFolders
+using SolarGeometry
 
 # set up calibration path
 const calibration_path = @path normpath(joinpath(@__DIR__, "../../assets", "calibration"))
@@ -91,7 +92,8 @@ function HyperspectralImage(
     end
 
     # 3. Generate Coordinates
-    generateCoords!(X,Longitudes, Latitudes, Roll,Pitch,Heading,Times,ViewingAngle,fdata;θ_view=θ_view,z_ground=z_ground,isflipped=isflipped)
+    generateCoords!(X,Longitudes, Latitudes, Roll,Pitch,Heading,Times,ViewingAngle,SolarAzimuth,SolarElevation,SolarZenith,start_time,fdata;θ_view=θ_view,z_ground=z_ground,isflipped=isflipped)
+
 
     return HyperspectralImage(
         X,
