@@ -1,3 +1,5 @@
+
+
 """
     bump_to_nearest_Δx(val, Δx)
 
@@ -28,58 +30,72 @@ end
 
 
 
-# function get_resampled_grid(hsi::HyperspectralImage; Δx=0.1)
-#     # reinterpolating the results to a new grid
-#     xmin, xmax = extrema(hsi.X[1,:,:])
-#     ymin, ymax = extrema(hsi.X[2,:,:])
+function get_resampled_grid(hsi::HyperspectralImage; Δx=0.1)
+    # reinterpolating the results to a new grid
+    xmin, xmax = extrema(hsi.X[1,:,:])
+    ymin, ymax = extrema(hsi.X[2,:,:])
 
-#     bump_to_nearest_Δx(xmin, Δx)
-
-
-#     xmin, xmax, ymin, ymax = get_new_bounds(xmin, xmax, ymin, ymax)
+    bump_to_nearest_Δx(xmin, Δx)
 
 
-#     # estimate the bound for minimum pixel spacing in meters
-#     npix = max(size(hsi.X)...)
-#     Δx_min = min((ymax-ymin)/npix, (xmax-xmin)/npix)
+    xmin, xmax, ymin, ymax = get_new_bounds(xmin, xmax, ymin, ymax)
 
 
-#     # generate a new x-y grid at the desired resolution
-#     xs_new = round.(range(xmin, stop=xmax, step=Δx), digits=2)
-#     ys_new = round.(range(ymin, stop=ymax, step=Δx), digits=2)
+    # estimate the bound for minimum pixel spacing in meters
+    npix = max(size(hsi.X)...)
+    Δx_min = min((ymax-ymin)/npix, (xmax-xmin)/npix)
 
 
-#     # Xout = permutedims(cat([x for x ∈ xs_new, y ∈ ys_new], [y for x ∈ xs_new, y ∈ ys_new], dims=3), (3,1,2))  # 1.7 ms
+    # generate a new x-y grid at the desired resolution
+    xs_new = round.(range(xmin, stop=xmax, step=Δx), digits=2)
+    ys_new = round.(range(ymin, stop=ymax, step=Δx), digits=2)
 
-#     Xhsi = bump_to_nearest_Δx.(hsi.X[1:2,:,:],Δx)
+
+    # Xout = permutedims(cat([x for x ∈ xs_new, y ∈ ys_new], [y for x ∈ xs_new, y ∈ ys_new], dims=3), (3,1,2))  # 1.7 ms
+
+    Xhsi = bump_to_nearest_Δx.(hsi.X[1:2,:,:],Δx)
 
 
-#     # generate hsi pixel indices in outbound grid
-#     Xhsi_is = Matrix{Int}(undef, size(Xhsi, 2), size(Xhsi,3));
-#     Xhsi_js = Matrix{Int}(undef, size(Xhsi, 2), size(Xhsi,3));
-#     @tturbo for j ∈ axes(Xhsi, 3), i ∈ axes(Xhsi,2)
-#         Xhsi_is[i,j] = Int(round((Xhsi[1,i,j] - xmin)/Δx + 1))
-#         Xhsi_js[i,j] = Int(round((Xhsi[2,i,j] - ymin)/Δx + 1))
-#     end
+    # generate hsi pixel indices in outbound grid
+    Xhsi_is = Matrix{Int}(undef, size(Xhsi, 2), size(Xhsi,3));
+    Xhsi_js = Matrix{Int}(undef, size(Xhsi, 2), size(Xhsi,3));
+    @tturbo for j ∈ axes(Xhsi, 3), i ∈ axes(Xhsi,2)
+        Xhsi_is[i,j] = Int(round((Xhsi[1,i,j] - xmin)/Δx + 1))
+        Xhsi_js[i,j] = Int(round((Xhsi[2,i,j] - ymin)/Δx + 1))
+    end
 
-#     # generate boundary mask
-#     IsInbounds = [false for i ∈ 1:length(xs_new), j ∈ 1:length(ys_new)];
-#     @tturbo for j ∈ axes(Xhsi,3), i ∈ axes(Xhsi,2)
-#         IsInbounds[Xhsi_is[i,j], Xhsi_js[i,j]] = true
-#     end
+    # generate boundary mask
+    IsInbounds = [false for i ∈ 1:length(xs_new), j ∈ 1:length(ys_new)];
+    @tturbo for j ∈ axes(Xhsi,3), i ∈ axes(Xhsi,2)
+        IsInbounds[Xhsi_is[i,j], Xhsi_js[i,j]] = true
+    end
 
-#     # generate array w/ number of HSI pixels per location
-#     Npixels = zeros(Int, size(IsInbounds)...)
+    # generate array w/ number of HSI pixels per location
+    Npixels = zeros(Int, size(IsInbounds)...)
 
-#     Threads.@threads for j ∈ axes(Xhsi_is,2)
-#         for i ∈ axes(Xhsi_is, 1)
-#             Npixels[Xhsi_is[i,j], Xhsi_js[i,j]] += 1
-#         end
-#     end
+    Threads.@threads for j ∈ axes(Xhsi_is,2)
+        for i ∈ axes(Xhsi_is, 1)
+            Npixels[Xhsi_is[i,j], Xhsi_js[i,j]] += 1
+        end
+    end
 
-#     return xs_new, ys_new, Xhsi_is, Xhsi_js, IsInbounds, Npixels
-# end
+    # generate idx mappings
+    ij_pixels = findall(IsInbounds)
+    ij_notpixels = findall(.!IsInbounds)
 
+    idx_dict = Dict()
+    for ij ∈ ij_pixels
+        idx_dict[ij] = CartesianIndex{2}[]
+    end
+
+    for j ∈ axes(Xhsi_is, 2), i ∈ axes(Xhsi_is,1)
+        ij = CartesianIndex(Xhsi_is[i,j], Xhsi_js[i,j])
+        push!(idx_dict[ij], CartesianIndex{2}(i,j))
+    end
+
+
+    return xs_new, ys_new, Xhsi_is, Xhsi_js, IsInbounds, Npixels, ij_pixels, ij_notpixels, idx_dict
+end
 
 
 # # create vector of labels
