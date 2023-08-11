@@ -41,6 +41,10 @@ export bump_to_nearest_Δx, get_new_bounds, get_resampled_grid, resample_datacub
 
 
 
+include("folder_utils.jl")
+export get_bil_files, get_raw_file_list
+
+
 function HyperspectralImage(
     bilpath::String,
     bilhdr::String,
