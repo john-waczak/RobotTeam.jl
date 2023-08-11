@@ -94,57 +94,43 @@ viz!(ax, mesh, color=vcat(hsi.SolarAzimuth...))
 
 
 
-# now we want to resample to a square grid
 
 
-
-xs_new, ys_new, Xhsi_is, Xhsi_js, IsInbounds, Npixels, ij_pixels, ij_notpixels, idx_dict = get_resampled_grid(hsi)
-
-
-# create outbound latitude and longitude arrays
-
-Longitudes_out= Matrix{Float64}(undef, size(IsInbounds)...)
-Latitudes_out = Matrix{Float64}(undef, size(IsInbounds)...)
-
-using Geodesy
-
-Threads.@threads for j ∈ axes(Longitudes_out,2)
-    for i ∈ axes(Longitudes_out,1)
-        lla = LLAfromUTMZ(wgs84)(UTMZ(xs_new[i], ys_new[j], 0, hsi.zone, hsi.isnorth))
-        Longitudes_out[i,j] = lla.lon
-        Latitudes_out[i,j] = lla.lat
-    end
-end
+xs, ys, isnorth, zone, Longitudes, Latitudes, IsInbounds, varnames, printnames, λs, Data_μ, Data_σ = resample_datacube(hsi)
 
 
-Rout = Array{Float64}(undef, length(hsi.λs), size(IsInbounds)...)
-# set all out-of-bounds pixels to NaN
-Rout[:,ij_notpixels] .= NaN
-
-Threads.@threads for k ∈ 1:length(ij_pixels)
-    ij = ij_pixels[k]
-    Rout[:,ij] = mean(hsi.Reflectance[:,idx_dict[ij]], dims=2)[:,1]
-end
-
-maximum(Rout)
-
+ij_pixels = findall(IsInbounds)
 
 f = cmk.Figure(resolution=(800,600))
 ax = cmk.Axis(f[1,1], xlabel="longitude", ylabel="latitude")
 cmk.heatmap!(ax, satmap.w..satmap.e, satmap.s..satmap.n, satmap.img)
-f
-
 cmk.xlims!(ax, -97.7168, -97.7125)
 cmk.ylims!(ax, 33.70075, 33.7035)
+img = getRGB(Data_μ, hsi.λs, ij_pixels)
+
+cmk.heatmap!(ax, Longitudes, Latitudes, img)
 
 f
 
-cmk.heatmap!(ax, Longitudes_out, Latitudes_out, Rout[100,:,:])
-
-f
 
 
+save_resampled_hsi(
+    xs,
+    ys,
+    isnorth,
+    zone,
+    Longitudes,
+    Latitudes,
+    IsInbounds,
+    varnames,
+    printnames,
+    λs,
+    Data_μ,
+    Data_σ,
+    joinpath(outpath, "hsi.h5");
+    is_band_chunked=true
+)
 
 
 
-
+h5 = h5open(joinpath(outpath, "hsi.h5"), "r")

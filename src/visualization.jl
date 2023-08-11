@@ -14,7 +14,7 @@ function process_image(img;α=10.0,β=0.0)
     # see example: https://www.satmapper.hu/en/rgb-images/
     img_out = copy(img)
     # 1. normalize each band
-    for i ∈ axes(img,1)
+    for i ∈ 1:3
         #brighten
         img_out[i,:,:] .= clamp.(α.*img_out[i,:,:] .+ β, 0, 1)
 
@@ -24,34 +24,6 @@ function process_image(img;α=10.0,β=0.0)
 
     end
     return img_out
-end
-
-
-"""
-    generateRGB!(h5::HDF5.File)
-
-Given a HSI stored in HDF5 file `h5`, generate an RGB representation of the reflectance data by selecting specific wavelengths for the red, green, and blue bins.
-"""
-function generateRGB!(h5::HDF5.File; λred=630.0, λgreen=532.0, λblue=465.0)
-    println("\tfetching wavelengths")
-    λs = read(h5["raw/reflectance/wavelengths"])
-    idx_r = argmin(abs.(λs .- λred))
-    idx_g = argmin(abs.(λs .- λgreen))
-    idx_b = argmin(abs.(λs .- λblue))
-
-    println("\tfetching reflectances")
-    img = permutedims(read(h5["raw/reflectance/reflectance"])[[idx_r, idx_g, idx_b],:,:], (1,3,2))
-
-    println("\tparsing as image")
-    imgp = process_image(img)
-
-    g = create_group(h5["raw"], "RGB")
-    g["RGB"] = imgp
-end
-
-
-function getRGB(h5::HDF5.File)
-    return colorview(RGB, read(h5["raw/RGB/RGB"]))
 end
 
 
@@ -66,6 +38,25 @@ function getRGB(hsi::HyperspectralImage; λred=630.0, λgreen=532.0, λblue=465.
     imgp = process_image(img)
 
     return colorview(RGB, imgp)
+end
+
+function getRGB(Data, λs, ij_pixels; λred=630.0, λgreen=532.0, λblue=465.0)
+    img = zeros(4, size(Data,2), size(Data,3))
+
+    idx_r = argmin(abs.(λs .- λred))
+    idx_g = argmin(abs.(λs .- λgreen))
+    idx_b = argmin(abs.(λs .- λblue))
+
+    Threads.@threads for ij ∈ ij_pixels
+        img[1, ij] = Data[idx_r, ij]
+        img[2, ij] = Data[idx_g, ij]
+        img[3, ij] = Data[idx_b, ij]
+        img[4, ij] = 1.0
+    end
+
+    imgp = process_image(img)
+
+    return colorview(RGBA, imgp)
 end
 
 

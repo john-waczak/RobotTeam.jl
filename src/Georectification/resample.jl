@@ -1,4 +1,5 @@
-
+using Statistics
+using HDF5
 
 """
     bump_to_nearest_Δx(val, Δx)
@@ -70,15 +71,6 @@ function get_resampled_grid(hsi::HyperspectralImage; Δx=0.1)
         IsInbounds[Xhsi_is[i,j], Xhsi_js[i,j]] = true
     end
 
-    # generate array w/ number of HSI pixels per location
-    Npixels = zeros(Int, size(IsInbounds)...)
-
-    Threads.@threads for j ∈ axes(Xhsi_is,2)
-        for i ∈ axes(Xhsi_is, 1)
-            Npixels[Xhsi_is[i,j], Xhsi_js[i,j]] += 1
-        end
-    end
-
     # generate idx mappings
     ij_pixels = findall(IsInbounds)
     ij_notpixels = findall(.!IsInbounds)
@@ -94,100 +86,174 @@ function get_resampled_grid(hsi::HyperspectralImage; Δx=0.1)
     end
 
 
-    return xs_new, ys_new, Xhsi_is, Xhsi_js, IsInbounds, Npixels, ij_pixels, ij_notpixels, idx_dict
+    return xs_new, ys_new, Xhsi_is, Xhsi_js, IsInbounds, ij_pixels, ij_notpixels, idx_dict
 end
 
 
-# # create vector of labels
-# varnames = []
-# printnames = []
-# for i ∈ 1:length(hsi.λs)
-#     idx = lpad(i, 3, "0")
-#     push!(varnames, "R_$(idx)")
-#     push!(printnames, "Reflectance Band $(idx)")
-# end
+function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
+    # 1. resample to a square grid
+    println("\tgenerating new grid")
+    xs_new, ys_new, Xhsi_is, Xhsi_js, IsInbounds, ij_pixels, ij_notpixels, idx_dict = get_resampled_grid(hsi;Δx=Δx)
 
-# push!(varnames, "roll")
-# push!(printnames, "Roll")
+    # 2. allocate latitudes and longitudes
+    Longitudes_out= Matrix{Float64}(undef, size(IsInbounds)...)
+    Latitudes_out = Matrix{Float64}(undef, size(IsInbounds)...)
 
-# push!(varnames, "pitch")
-# push!(printnames, "Pitch")
 
-# push!(varnames, "heading")
-# push!(printnames, "Heading")
+    Threads.@threads for j ∈ axes(Longitudes_out,2)
+        for i ∈ axes(Longitudes_out,1)
+            lla = LLAfromUTMZ(wgs84)(UTMZ(xs_new[i], ys_new[j], 0, hsi.zone, hsi.isnorth))
+            Longitudes_out[i,j] = lla.lon
+            Latitudes_out[i,j] = lla.lat
+        end
+    end
 
-# push!(varnames, "camera_angle")
-# push!(printnames, "Camera Angle")
 
-# push!(varnames, "solar_azimuth")
-# push!(printnames, "Solar Azimuth")
+    # 3. create vector of labels
 
-# push!(varnames, "solar_elevation")
-# push!(printnames, "Solar Elevation")
+    varnames = [
+        ["R_"*lpad(idx, 3,"0") for idx ∈ 1:length(hsi.λs)]...,
+        "roll",
+        "pitch",
+        "heading",
+        "view_angle",
+        "solar_azimuth",
+        "solar_elevation",
+        "solar_zenith",
+    ]
 
-# push!(varnames, "solar_zenith")
-# push!(printnames, "Solar Zenith")
+    printnames = [
+        ["Reflectance Band "*lpad(idx, 3,"0") for idx ∈ 1:length(hsi.λs)]...,
+        "Roll",
+        "Pitch",
+        "Heading",
+        "Viewing Angle",
+        "Solar Azimuth",
+        "Solar Elevation",
+        "Solar Zenith",
+    ]
 
-# push!(varnames, "mNDWI")
-# push!(printnames, "mNDWI")
+    # 4. Allocate Data Matrices
+    Data_μ = Array{Float64}(undef, length(varnames), size(IsInbounds)...);
+    Data_σ = Array{Float64}(undef, length(varnames), size(IsInbounds)...);
+    # set all out-of-bounds pixels to NaN
+    Data_μ[:,ij_notpixels] .= NaN;
+    Data_σ[:,ij_notpixels] .= NaN;
 
-# push!(varnames, "NDVI")
-# push!(printnames, "NDVI")
 
-# push!(varnames, "SR")
-# push!(printnames, "SR")
+    # 5. set up band indices
+    ks_reflectance = 1:length(hsi.λs)
+    k_roll = findfirst(varnames .== "roll")
+    k_pitch = findfirst(varnames .== "pitch")
+    k_heading = findfirst(varnames .== "heading")
+    k_view = findfirst(varnames .== "view_angle")
+    k_az = findfirst(varnames .== "solar_azimuth")
+    k_el = findfirst(varnames .== "solar_elevation")
+    k_zen = findfirst(varnames .== "solar_zenith")
 
-# push!(varnames, "EVI")
-# push!(printnames, "EVI")
 
-# push!(varnames, "AVRI")
-# push!(printnames, "AVRI")
+    # 6. Resample the data
+    println("\tinterpolating...")
+    Threads.@threads for k ∈ 1:length(ij_pixels)
+        ij = ij_pixels[k]
 
-# push!(varnames, "NDVI_705")
-# push!(printnames, "NDVI_705")
+        # copy reflectance
+        Data_μ[ks_reflectance,ij] = mean(hsi.Reflectance[:,idx_dict[ij]], dims=2)[:,1]
+        Data_σ[ks_reflectance,ij] = std(hsi.Reflectance[:,idx_dict[ij]], dims=2)[:,1]
 
-# push!(varnames, "MSR_705")
-# push!(printnames, "MSR_705")
+        # copy Roll
+        Data_μ[k_roll,ij] = mean(hsi.Roll[idx_dict[ij]])
+        Data_σ[k_roll,ij] = std(hsi.Roll[idx_dict[ij]])
 
-# push!(varnames, "MNDVI")
-# push!(printnames, "MNDVI")
+        # copy Pitch
+        Data_μ[k_pitch,ij] = mean(hsi.Pitch[idx_dict[ij]])
+        Data_σ[k_pitch,ij] = std(hsi.Pitch[idx_dict[ij]])
 
-# push!(varnames, "VOG1")
-# push!(printnames, "VOG1")
+        # copy Heading
+        Data_μ[k_heading,ij] = mean(hsi.Heading[idx_dict[ij]])
+        Data_σ[k_heading,ij] = std(hsi.Heading[idx_dict[ij]])
 
-# push!(varnames, "VOG2")
-# push!(printnames, "VOG2")
+        # copy Viewing Angle
+        Data_μ[k_view,ij] = mean(hsi.ViewAngle[idx_dict[ij]])
+        Data_σ[k_view,ij] = std(hsi.ViewAngle[idx_dict[ij]])
 
-# push!(varnames, "VOG3")
-# push!(printnames, "VOG3")
+        # copy Solar Azimuth
+        Data_μ[k_az,ij] = mean(hsi.SolarAzimuth[idx_dict[ij]])
+        Data_σ[k_az,ij] = std(hsi.SolarAzimuth[idx_dict[ij]])
 
-# push!(varnames, "PRI")
-# push!(printnames, "PRI")
+        # copy Solar Elevation
+        Data_μ[k_el,ij] = mean(hsi.SolarElevation[idx_dict[ij]])
+        Data_σ[k_el,ij] = std(hsi.SolarElevation[idx_dict[ij]])
 
-# push!(varnames, "SIPI")
-# push!(printnames, "SIPI")
+        # copy Solar Zenith
+        Data_μ[k_zen,ij] = mean(hsi.SolarZenith[idx_dict[ij]])
+        Data_σ[k_zen,ij] = std(hsi.SolarZenith[idx_dict[ij]])
+    end
 
-# push!(varnames, "PSRI")
-# push!(printnames, "PSRI")
 
-# push!(varnames, "CRI1")
-# push!(printnames, "CRI1")
+    return xs_new, ys_new, hsi.isnorth, hsi.zone, Longitudes_out, Latitudes_out, IsInbounds, varnames, printnames, hsi.λs, Data_μ, Data_σ
 
-# push!(varnames, "CRI2")
-# push!(printnames, "CRI2")
+end
 
-# push!(varnames, "ARI1")
-# push!(printnames, "ARI1")
 
-# push!(varnames, "ARI2")
-# push!(printnames, "ARI2")
+function save_resampled_hsi(
+    xs,
+    ys,
+    isnorth,
+    zone,
+    Longitudes,
+    Latitudes,
+    IsInbounds,
+    varnames,
+    printnames,
+    λs,
+    Data_μ,
+    Data_σ,
+    outpath;
+    Δx=0.10,
+    is_spec_chunked=false,
+    is_band_chunked=false
+    )
 
-# push!(varnames, "WBI")
-# push!(printnames, "WBI")
+    h5open(outpath, "w") do f
+        d = create_group(f, "data-Δx_$(Δx)")
 
-# push!(varnames, "MCRI")
-# push!(printnames, "MCRI")
+        # save resolution
+        d["Δx"] = Δx
 
-# push!(varnames, "TCARI")
-# push!(printnames, "TCARI")
+        # write the UTM coords
+        d["X"] = xs
+        d["Y"] = ys
+        d["isnorth"] = isnorth
+        d["zone"] = zone
 
+        # write Lat/Lon grid
+        d["Longitudes"] = Longitudes
+        d["Latitudes"] = Latitudes
+
+        # write pixel-mask
+        d["IsInbounds"] = IsInbounds
+
+        # write variable names
+        d["varnames"] = varnames
+        d["printnames"] = printnames
+
+        # save wavelength values
+        d["λs"] = λs
+
+
+        # save mean data
+        if is_spec_chunked
+            d["Data_μ", chunk=(length(varnames),1,1)] = Data_μ
+            d["Data_σ", chunk=(length(varnames),1,1)] = Data_σ
+        elseif is_band_chunked
+            d["Data_μ", chunk=(1,size(Longitudes)...)] = Data_μ
+            d["Data_σ", chunk=(1,size(Longitudes)...)] = Data_σ
+        else
+            d["Data_μ"] = Data_μ
+            d["Data_σ"] = Data_σ
+        end
+
+
+    end
+end

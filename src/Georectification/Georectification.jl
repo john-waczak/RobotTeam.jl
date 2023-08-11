@@ -9,6 +9,7 @@ using Geodesy
 using Meshes
 using RelocatableFolders
 using SolarGeometry
+using Statistics
 
 # set up calibration path
 const calibration_path = @path normpath(joinpath(@__DIR__, "../../assets", "calibration"))
@@ -36,7 +37,7 @@ export build_mesh
 
 
 include("resample.jl")
-export bump_to_nearest_Δx, get_new_bounds, get_resampled_grid
+export bump_to_nearest_Δx, get_new_bounds, get_resampled_grid, resample_datacube, save_resampled_hsi
 
 
 
