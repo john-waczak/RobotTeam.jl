@@ -132,5 +132,7 @@ save_resampled_hsi(
 )
 
 
+println(outpath)
 
 h5 = h5open(joinpath(outpath, "hsi.h5"), "r")
+close(h5)
