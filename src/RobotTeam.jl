@@ -27,7 +27,7 @@ export get_bil_files, get_raw_file_list
 
 include("Boat/Boat.jl")
 using .Boat
-export importAirMar, importCOM1, importCOM2, importCOM3, importLISST, importNMEA
+export importAirMar, importCOM1, importCOM2, importCOM3, importLISST, importNMEA, processBoatFiles, combine_boat_dfs
 
 # visualization tools
 

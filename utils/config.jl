@@ -1,7 +1,7 @@
 basepath = "/media/jwaczak/LabData/RobotTeam/raw/hsi"
 @assert ispath(basepath)
 
-outpath = "/media/jwaczak/LabData/RobotTeam/processed"
+outpath = "/media/jwaczak/LabData/RobotTeam/processed/hsi"
 if !ispath(outpath)
     mkpath(outpath)
 end
@@ -52,4 +52,11 @@ isflipped=false          # flip pixel orientation
 Δx = 0.10                # resampling resolution (m)
 is_spec_chunked=false    # chunk HDF5 by pixel
 is_band_chunked=true     # chunk HDF5 by band
+
+
+# define bounding box for Scotty's Ranch
+w= -97.717472
+n= 33.703572
+s= 33.700797
+e= -97.712413
 

@@ -1,14 +1,20 @@
 module Boat
 
+using ..Georectification: bump_to_nearest_Δx
 
 using CSV, DataFrames
 using Dates
+using ProgressMeter
+using ProgressMeter
+using DataInterpolations
+using Geodesy
+
 
 # we will need to parse NMEA encoded gps/sensor strings
 # see this site: http://aprs.gids.nl/nmea/
 
 
-export importAirMar, importCOM1, importCOM2, importCOM3, importLISST, importNMEA
+export importAirMar, importCOM1, importCOM2, importCOM3, importLISST, importNMEA, processBoatFiles, combine_boat_dfs
 
 
 
@@ -493,6 +499,313 @@ function importLISST(path::String)
         end
     end
     return DataFrame(LISST)
+end
+
+
+
+
+
+"""
+    processBoatFiles(basepath::String, outpath::String)
+
+Parse NMEA files into CSVs.
+"""
+function processBoatFiles(basepath::String, outpath::String)
+    for (root, dirs, files) in walkdir(basepath)
+        @showprogress for file in files
+            if !(occursin("fixed", file))
+                if occursin("AirMar", file)
+                    name = split(file, "_")[2]
+                    airmar_gps, airmar_speed = importAirMar(joinpath(root, file))
+                    CSV.write(joinpath(outpath, name*"_airmar_gps.csv"), airmar_gps)
+                    CSV.write(joinpath(outpath, name*"_airmar_speed.csv"), airmar_speed)
+                elseif occursin("COM1", file)
+                    name = split(file, "_")[2]
+                    COM1 = importCOM1(joinpath(root, file))
+                    CSV.write(joinpath(outpath, name*"_COM1.csv"), COM1)
+
+                elseif occursin("COM2", file)
+                    name = split(file, "_")[2]
+                    COM2 = importCOM2(joinpath(root, file))
+                    CSV.write(joinpath(outpath, name*"_COM2.csv"), COM2)
+
+                elseif occursin("COM3", file)
+                    name = split(file, "_")[2]
+                    COM3 = importCOM3(joinpath(root, file))
+                    CSV.write(joinpath(outpath, name*"_COM3.csv"), COM3)
+
+                elseif occursin("LISST", file)
+                    name = split(file, "_")[2]
+                    LISST = importLISST(joinpath(root, file))
+                    CSV.write(joinpath(outpath, name*"_LISST.csv"), LISST)
+
+                elseif occursin("nmea", file) || occursin("NMEA", file)
+                    name = split(file, "_")[2]
+                    nmea = importNMEA(joinpath(root, file))
+                    CSV.write(joinpath(outpath, name*"_nmea.csv"), nmea)
+                elseif occursin("nmea", file)
+                    # skip for now
+                    continue
+                end
+            end
+        end
+    end
+end
+
+
+
+
+
+function combine_boat_dfs(dirpath,
+                          outpath;
+                          w = -97.717472,
+                          n = 33.703572,
+                          s = 33.700797,
+                          e = -97.712413,
+                          Δx=0.10
+                          )
+
+
+
+    airmar_gps_dfs = []
+    airmar_speed_dfs = []
+    com1_dfs = []
+    com2_dfs = []
+    com3_dfs = []
+    lisst_dfs = []
+    nmea_dfs = []
+
+    @showprogress for f ∈ readdir(dirpath)
+        if endswith(f, "gps.csv")
+            push!(airmar_gps_dfs, DataFrame(CSV.File(joinpath(dirpath, f))))
+        elseif endswith(f, "speed.csv")
+            push!(airmar_speed_dfs, DataFrame(CSV.File(joinpath(dirpath, f))))
+        elseif endswith(f, "COM1.csv")
+            push!(com1_dfs, DataFrame(CSV.File(joinpath(dirpath, f))))
+        elseif endswith(f, "COM2.csv")
+            push!(com2_dfs, DataFrame(CSV.File(joinpath(dirpath, f))))
+        elseif endswith(f, "COM3.csv")
+            push!(com3_dfs, DataFrame(CSV.File(joinpath(dirpath, f))))
+        elseif endswith(f, "LISST.csv")
+            push!(lisst_dfs, DataFrame(CSV.File(joinpath(dirpath, f))))
+        elseif endswith(f, "nmea.csv")
+            push!(nmea_dfs, DataFrame(CSV.File(joinpath(dirpath, f))))
+        end
+    end
+
+    airmar_gps_df = vcat(airmar_gps_dfs...)
+    airmar_speed_df = vcat(airmar_speed_dfs...)
+    com1_df = vcat(com1_dfs...)
+    com2_df = vcat(com2_dfs...)
+    com3_df = vcat(com3_dfs...)
+    lisst_df = vcat(lisst_dfs...)
+    nmea_df = vcat(nmea_dfs...)
+
+
+    sort!(airmar_gps_df, :utc_dt)
+    unique!(airmar_gps_df)
+
+    sort!(airmar_speed_df, :utc_dt)
+    unique!(airmar_speed_df)
+
+    sort!(com1_df, :utc_dt)
+    unique!(com1_df)
+
+    sort!(com2_df, :utc_dt)
+    unique!(com2_df)
+
+    sort!(com3_df, :utc_dt)
+    unique!(com3_df)
+
+    sort!(lisst_df, :utc_dt)
+    unique!(lisst_df)
+
+    sort!(nmea_df, :utc_dt)
+    nmea_df = unique(nmea_df)
+    # nmea sensor has duplicate readings sometimes
+    nmea_df = combine(first, groupby(sort(nmea_df, :utc_dt), :utc_dt))
+
+    # make sure we're in the correct bounding box
+    nmea_df = nmea_df[(nmea_df.latitude .> s) .& (nmea_df.latitude .< n) .& (nmea_df.longitude .> w) .& (nmea_df.longitude .< e), :]
+
+    # filter to times within boat GPS values
+    tstart = nmea_df.utc_dt[1]
+    tend = nmea_df.utc_dt[end]
+
+    println("\tcom1 df size: ", size(com1_df))
+    println("\tcom2 df size: ", size(com2_df))
+    println("\tcom3 df size: ", size(com3_df))
+    println("\tairmar df size: ", size(airmar_speed_df))
+    println("\tlisst df size: ", size(lisst_df))
+
+
+    # filter df's to those times that fall within Boat GPS times (i.e. nmea)
+    com1_df_filtered = com1_df[(com1_df.utc_dt .>= tstart) .& (com1_df.utc_dt .<= tend ), :];
+    com2_df_filtered = com2_df[(com2_df.utc_dt .>= tstart) .& (com2_df.utc_dt .<= tend ), :];
+    com3_df_filtered = com3_df[(com3_df.utc_dt .>= tstart) .& (com3_df.utc_dt .<= tend ), :];
+    airmar_speed_df_filtered = airmar_speed_df[(airmar_speed_df.utc_dt .>= tstart) .& (airmar_speed_df.utc_dt .<= tend ), :];
+    lisst_df_filtered = lisst_df[(lisst_df.utc_dt .>= tstart) .& (lisst_df.utc_dt .<= tend ), :];
+
+    println("\tcom1 filtered df size: ", size(com1_df_filtered))
+    println("\tcom2 filtered df size: ", size(com2_df_filtered))
+    println("\tcom3 filtered df size: ", size(com3_df_filtered))
+    println("\tairmar filtered df size: ", size(airmar_speed_df_filtered))
+    println("\tlisst filtered df size: ", size(lisst_df_filtered))
+
+
+    # now let's interpolate to our GPS times
+    interpolated = Dict()
+
+    interpolated["longitude"] = nmea_df.longitude
+    interpolated["latitude"] = nmea_df.latitude
+
+    interpolated["unix_dt"] = nmea_df.unix_dt
+    interpolated["utc_dt"] = nmea_df.utc_dt
+
+
+
+    # go through COM1
+    println("\tInterpolating COM1")
+    names(com1_df_filtered)
+    Br_interp = CubicSpline(com1_df_filtered.Br, com1_df_filtered.unix_dt)
+    interpolated["Br"] = Br_interp.(interpolated["unix_dt"])
+
+    Ca_interp = CubicSpline(com1_df_filtered.Ca, com1_df_filtered.unix_dt)
+    interpolated["Ca"] = Ca_interp.(interpolated["unix_dt"])
+
+    Cl_interp = CubicSpline(com1_df_filtered.Cl, com1_df_filtered.unix_dt)
+    interpolated["Cl"] = Cl_interp.(interpolated["unix_dt"])
+
+    HDO_interp = CubicSpline(com1_df_filtered.HDO, com1_df_filtered.unix_dt)
+    interpolated["HDO"] = HDO_interp.(interpolated["unix_dt"])
+
+    HDO_percent_interp = CubicSpline(com1_df_filtered.HDO_percent, com1_df_filtered.unix_dt)
+    interpolated["HDO_percent"] = HDO_percent_interp.(interpolated["unix_dt"])
+
+    NH4_interp = CubicSpline(com1_df_filtered.NH4, com1_df_filtered.unix_dt)
+    interpolated["NH4"] = NH4_interp.(interpolated["unix_dt"])
+
+    NO3_interp = CubicSpline(com1_df_filtered.NO3, com1_df_filtered.unix_dt)
+    interpolated["NO3"] = NO3_interp.(interpolated["unix_dt"])
+
+    Na_interp = CubicSpline(com1_df_filtered.Na, com1_df_filtered.unix_dt)
+    interpolated["Na"] = Na_interp.(interpolated["unix_dt"])
+
+    Salinity3488_interp = CubicSpline(com1_df_filtered.Salinity3488, com1_df_filtered.unix_dt)
+    interpolated["Salinity3488"] = Salinity3488_interp.(interpolated["unix_dt"])
+
+    SpCond_interp = CubicSpline(com1_df_filtered.SpCond, com1_df_filtered.unix_dt)
+    interpolated["SpCond"] = SpCond_interp.(interpolated["unix_dt"])
+
+    TDS_interp = CubicSpline(com1_df_filtered.TDS, com1_df_filtered.unix_dt)
+    interpolated["TDS"] = TDS_interp.(interpolated["unix_dt"])
+
+    Temp3488_interp = CubicSpline(com1_df_filtered.Temp3488, com1_df_filtered.unix_dt)
+    interpolated["Temp3488"] = Temp3488_interp.(interpolated["unix_dt"])
+
+    Turb3488_interp = CubicSpline(com1_df_filtered.Turb3488, com1_df_filtered.unix_dt)
+    interpolated["Turb3488"] = Turb3488_interp.(interpolated["unix_dt"])
+
+    pH_interp = CubicSpline(com1_df_filtered.pH, com1_df_filtered.unix_dt)
+    interpolated["pH"] = pH_interp.(interpolated["unix_dt"])
+
+    pH_mV_interp = CubicSpline(com1_df_filtered.pH_mV, com1_df_filtered.unix_dt)
+    interpolated["pH_mV"] = pH_mV_interp.(interpolated["unix_dt"])
+
+
+    # go through COM2
+    println("\tInterpolating COM2")
+    names(com2_df_filtered)
+    CDOM_interp = CubicSpline(com2_df_filtered.CDOM, com2_df_filtered.unix_dt)
+    interpolated["CDOM"] = CDOM_interp.(interpolated["unix_dt"])
+
+    Chl_interp = CubicSpline(com2_df_filtered.Chl, com2_df_filtered.unix_dt)
+    interpolated["Chl"] = Chl_interp.(interpolated["unix_dt"])
+
+    ChlRed_interp = CubicSpline(com2_df_filtered.ChlRed, com2_df_filtered.unix_dt)
+    interpolated["ChlRed"] = ChlRed_interp.(interpolated["unix_dt"])
+
+    Temp3489_interp = CubicSpline(com2_df_filtered.Temp3489, com2_df_filtered.unix_dt)
+    interpolated["Temp3489"] = Temp3489_interp.(interpolated["unix_dt"])
+
+    Turb3489_interp = CubicSpline(com2_df_filtered.Turb3489, com2_df_filtered.unix_dt)
+    interpolated["Turb3489"] = Turb3489_interp.(interpolated["unix_dt"])
+
+    bg_interp = CubicSpline(com2_df_filtered.bg, com2_df_filtered.unix_dt)
+    interpolated["bg"] = bg_interp.(interpolated["unix_dt"])
+
+    bgm_interp = CubicSpline(com2_df_filtered.bgm, com2_df_filtered.unix_dt)
+    interpolated["bgm"] = bgm_interp.(interpolated["unix_dt"])
+
+
+    # go through COM3
+    println("\tInterpolating COM3")
+    names(com3_df_filtered)
+    CO_interp = CubicSpline(com3_df_filtered.CO, com3_df_filtered.unix_dt)
+    interpolated["CO"] = CO_interp.(interpolated["unix_dt"])
+
+    OB_interp = CubicSpline(com3_df_filtered.OB, com3_df_filtered.unix_dt)
+    interpolated["OB"] = OB_interp.(interpolated["unix_dt"])
+
+    RefFuel_interp = CubicSpline(com3_df_filtered.RefFuel, com3_df_filtered.unix_dt)
+    interpolated["RefFuel"] = RefFuel_interp.(interpolated["unix_dt"])
+
+    Salinity3490_interp = CubicSpline(com3_df_filtered.Salinity3490, com3_df_filtered.unix_dt)
+    interpolated["Salinity3490"] = Salinity3490_interp.(interpolated["unix_dt"])
+
+    TDS_interp = CubicSpline(com3_df_filtered.TDS, com3_df_filtered.unix_dt)
+    interpolated["TDS"] = TDS_interp.(interpolated["unix_dt"])
+
+    TRYP_interp = CubicSpline(com3_df_filtered.TRYP, com3_df_filtered.unix_dt)
+    interpolated["TRYP"] = TRYP_interp.(interpolated["unix_dt"])
+
+    Temp3490_interp = CubicSpline(com3_df_filtered.Temp3490, com3_df_filtered.unix_dt)
+    interpolated["Temp3490"] = Temp3490_interp.(interpolated["unix_dt"])
+
+    Turb3490_interp = CubicSpline(com3_df_filtered.Turb3490, com3_df_filtered.unix_dt)
+    interpolated["Turb3490"] = Turb3490_interp.(interpolated["unix_dt"])
+
+
+    # go through lisst
+    println("\tInterpolating LISST")
+    names(lisst_df_filtered)
+    # cubic spline failing for some reason.
+    SSC_interp = QuadraticInterpolation(lisst_df_filtered.SSC, lisst_df_filtered.unix_dt)
+    interpolated["SSC"] = []
+    for t ∈ interpolated["unix_dt"]
+        try
+            push!(interpolated["SSC"], SSC_interp(t))
+        catch e
+            push!(interpolated["SSC"], NaN)
+        end
+    end
+
+
+    # generate UTMz coords rounded to nearest Δx
+    xs = zeros(length(interpolated["longitude"]))
+    ys = zeros(length(interpolated["longitude"]))
+    zones = []
+    isnorths = []
+
+    for i ∈ 1:length(xs)
+        utmz = UTMZ(LLA(interpolated["latitude"][i], interpolated["longitude"][i]), wgs84)
+        xs[i] = bump_to_nearest_Δx(utmz.x, Δx)
+        ys[i] = bump_to_nearest_Δx(utmz.y, Δx)
+        push!(zones, utmz.zone)
+        push!(isnorths, utmz.isnorth)
+
+        # update the lat/lon to reflect new resolution
+        lla = LLAfromUTMZ(wgs84)(UTMZ(xs[i], ys[i], 0.0, zones[i], isnorths[i]))
+        interpolated["latitude"][i] = lla.lat
+        interpolated["longitude"][i] = lla.lon
+    end
+
+    interpolated["X"] = bump_to_nearest_Δx.(xs, Δx)
+    interpolated["Y"] = bump_to_nearest_Δx.(ys, Δx)
+    interpolated["zone"] = zones
+    interpolated["isnorth"] = isnorths
+
+    CSV.write(joinpath(outpath, "Targets.csv"), DataFrame(interpolated))
 end
 
 
