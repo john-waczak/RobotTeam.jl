@@ -60,6 +60,38 @@ function getRGB(Data, λs, ij_pixels; λred=630.0, λgreen=532.0, λblue=465.0)
 end
 
 
+function getRGB(h5::HDF5.File; λred=630.0, λgreen=532.0, λblue=465.0, Δx=0.10, α=10.0, β=0.0)
+    λs = h5["data-Δx_$(Δx)/λs"][:]
+
+    λred=630.0
+    λgreen=532.0
+    λblue=465.0
+
+    idx_r = argmin(abs.(λs .- λred))
+    idx_g = argmin(abs.(λs .- λgreen))
+    idx_b = argmin(abs.(λs .- λblue))
+
+    Rr = h5["data-Δx_$(Δx)/Data_μ"][idx_r, :, :]
+    Rg = h5["data-Δx_$(Δx)/Data_μ"][idx_g, :, :]
+    Rb = h5["data-Δx_$(Δx)/Data_μ"][idx_b, :, :]
+
+    ij_pixels = findall(h5["data-Δx_$(Δx)/IsInbounds"][:,:])
+    img = zeros(4, size(Rr)...)
+
+    Threads.@threads for ij ∈ ij_pixels
+        img[1, ij] = Rr[ij]
+        img[2, ij] = Rg[ij]
+        img[3, ij] = Rb[ij]
+        img[4, ij] = 1.0
+    end
+
+    imgp = process_image(img; α=α, β=β)
+
+    return colorview(RGBA, imgp)
+end
+
+
+
 
 
 

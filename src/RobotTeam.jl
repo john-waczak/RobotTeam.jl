@@ -23,6 +23,12 @@ export build_mesh
 export bump_to_nearest_Δx, get_new_bounds, get_resampled_grid, resample_datacube, save_resampled_hsi
 export get_bil_files, get_raw_file_list
 
+
+
+include("Boat/Boat.jl")
+using .Boat
+export importAirMar, importCOM1, importCOM2, importCOM3, importLISST, importNMEA
+
 # visualization tools
 
 include("visualization.jl")
