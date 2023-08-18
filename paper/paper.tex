@@ -2,7 +2,7 @@
 %  For support, please attach all files needed for compiling as well as the log file, and specify your operating system, LaTeX version, and LaTeX editor.
 
 %=================================================================
-\documentclass[journal,article,submit,pdftex,moreauthors]{Definitions/mdpi} 
+\documentclass[remotesensing,article,submit,pdftex,moreauthors]{Definitions/mdpi} 
 
 %--------------------
 % Class Options:
@@ -68,7 +68,7 @@
 
 %=================================================================
 % Full title of the paper (Capitalized)
-\Title{Title}
+\Title{Rapid Georectification of Pushbroom Hyperspectral Imagery for Real Time Processing by an Autonomous Aerial Vehicle}
 
 % MDPI internal command: Title for citation in the left column
 \TitleCitation{Title}
@@ -78,15 +78,15 @@
 %\newcommand{\orcidauthorB}{0000-0000-0000-000X} % Add \orcidB{} behind the author's name
 
 % Authors, for the paper (add full first names)
-\Author{Firstname Lastname $^{1,\dagger,\ddagger}$\orcidA{}, Firstname Lastname $^{2,\ddagger}$ and Firstname Lastname $^{2,}$*}
+\Author{John Waczak $^{1,\dagger,\ddagger}$\orcidA{}, David Lary $^{2,\ddagger}$ and Firstname Lastname $^{2,}$*}
 
 %\longauthorlist{yes}
 
 % MDPI internal command: Authors, for metadata in PDF
-\AuthorNames{Firstname Lastname, Firstname Lastname and Firstname Lastname}
+\AuthorNames{John Waczak, David Lary and Firstname Lastname}
 
 % MDPI internal command: Authors, for citation in the left column
-\AuthorCitation{Lastname, F.; Lastname, F.; Lastname, F.}
+\AuthorCitation{Waczak, J.; Lary, D.; Lastname, F.}
 % If this is a Chicago style journal: Lastname, Firstname, Firstname Lastname, and Firstname Lastname.
 
 % Affiliations / Addresses (Add [1] after \address if there is only one affiliation.)
@@ -107,7 +107,7 @@ $^{2}$ \quad Affiliation 2; e-mail@e-mail.com}
 %\conference{} % An extended version of a conference paper
 
 % Abstract (Do not insert blank lines, i.e. \\) 
-\abstract{A single paragraph of about 200 words maximum. For research articles, abstracts should give a pertinent overview of the work. We strongly encourage authors to use the following style of structured abstracts, but without headings: (1) Background: place the question addressed in a broad context and highlight the purpose of the study; (2) Methods: describe briefly the main methods or treatments applied; (3) Results: summarize the article's main findings; (4) Conclusions: indicate the main conclusions or interpretations. The abstract should be an objective representation of the article, it must not contain results which are not presented and substantiated in the main text and should not exaggerate the main conclusions.}
+\abstract{Recent developments in hyperspectral imaging technology have led to dramatic reductions in both size and weight of imaging platforms. Due to these improvements, it is now possible to incorporate the technology as the payload of autonomous aerial vehicles such as drones. However, the massive volume of hyperperspectral datacubes poses significant computational challenges to their adoption in real-time applications. In this paper, we develop a procedure for the rapid georectification of pushbroom imagery and demonstrate its application for real-time remote sensing... Results indicate that a typical image can be processed in ~10 seconds while it takes $x$ seconds to capture. }
 
 % Keywords
 \keyword{keyword 1; keyword 2; keyword 3 (List three to ten pertinent keywords specific to the article; yet reasonably common within the subject discipline.)} 
@@ -169,10 +169,38 @@ The template details the sections that can be used in a manuscript. Note that th
 % The order of the section titles is different for some journals. Please refer to the "Instructions for Authors” on the journal homepage.
 
 \section{Introduction}
+Overview of Hyperspectral Imagery
+
+Multi-spectral vs Hyperspectral imagery
+
+Paragraph about previous uses of HSI technology in remote sensing applications. Plant health, NDVI, water applications, land management, etc...
+
+Challenges of using HSI in real-time applications: Data volume, processing power, data streaming. Data are much to big to be streamed to the ground in real time; for this application, imagery need to be collected, georeferenced, and then turned into data products \emph{onboard the drone} before they can be readily streamed to the ground. We can always re-process the imagery later for an in-depth reanalysis, but for time-critical applications, we need all of the processing to happen on board the drone. 
+
+Application: Our robotic team
+
 
 The introduction should briefly place the study in a broad context and highlight why it is important. It should define the purpose of the work and its significance. The current state of the research field should be reviewed carefully and key publications cited. Please highlight controversial and diverging hypotheses when necessary. Finally, briefly mention the main aim of the work and highlight the principal conclusions. As far as possible, please keep the introduction comprehensible to scientists outside your particular field of research. Citing a journal paper \cite{ref-journal}. Now citing a book reference \cite{ref-book1,ref-book2} or other reference types \cite{ref-unpublish,ref-communication,ref-proceeding}. Please use the command \citep{ref-thesis,ref-url} for the following MDPI journals, which use author--date citation: Administrative Sciences, Arts, Econometrics, Economies, Genealogy, Humanities, IJFS, Journal of Intelligence, Journalism and Media, JRFM, Languages, Laws, Religions, Risks, Social Sciences, Literature.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Materials and Methods}
+Overview of the HSI 
+
+Overview of the Aerial Vehicle Platform (w/ NUC and SSD) 
+
+Georectification Procedure.
+\begin{itemize}
+    \item collect datacube 
+    \item read HSI in ENVI format
+    \item read Flight Data 
+    \item interpolate flight data to HSI times 
+    \item read Downwelling irradiance spectrum
+    \item convert radiance to reflectance 
+    \item georectify to obtain new coordinates 
+    \item resample to regular grid
+    \item save results to HDF5
+\end{itemize}
+
+Code and data availability via OSN and Github
 
 Materials and Methods should be described with sufficient details to allow others to replicate and build on published results. Please note that publication of your manuscript implicates that you must make all materials, data, computer code, and protocols associated with the publication available to readers. Please disclose at the submission stage any restrictions on the availability of materials or information. New methods and protocols should be described in detail while well-established methods can be briefly described and appropriately cited.
 
@@ -185,6 +213,15 @@ This is an example of a quote.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
+\begin{list}
+    \bullet Create table with processing timings for each step on a typical HSI
+    \bullet Create second table comparing time for full processing including resampling to a variety of scales (e.g. 5 cm, 10 cm, 25 cm) We will want a version of the processing function that does not include the uncertainties and the spectral indices
+    \bullet create additional table showing size of each of the data producs and their step in the pipeline (ending with a dataproduct like the NDVI)
+    \bullet Create a figure showing the georeferenced image on top of the satellite background 
+    \bullet Create another figure of the entire map with a spectral index applied to one of the dye-release datasets (to demonstrate use for real-time application like oil-spill)
+    \bullet create a figure of a sample HSI datacube in 3-d like from the previous paper with the rgb image on the top. 
+\end{list}
+
 
 This section may be divided by subheadings. It should provide a concise and precise description of the experimental results, their interpretation as well as the experimental conclusions that can be drawn.
 \subsection{Subsection}
