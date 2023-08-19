@@ -14,7 +14,6 @@ println("Output dir: $outpath")
 
 
 
-
 # create a plot of the HSI path on a satellite background tile
 w= -97.717472
 n= 33.703572
