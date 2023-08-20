@@ -7,10 +7,10 @@ using HDF5
 include("utils/vis_tools.jl")
 include("utils/config.jl")
 
-boatpath = "/media/jwaczak/LabData/RobotTeam/raw/boat"
+boatpath = "/media/teamlary/LabData/RobotTeam/raw/boat"
 @assert ispath(boatpath)
 
-outpath = "/media/jwaczak/LabData/RobotTeam/processed/boat"
+outpath = "/media/teamlary/LabData/RobotTeam/processed/boat"
 if !ispath(outpath)
     mkpath(outpath)
 end
@@ -40,7 +40,7 @@ for (date, paths) ∈ paths_dict
 end
 
 
-prepared_path = "/media/jwaczak/LabData/RobotTeam/prepared"
+prepared_path = "/media/teamlary/LabData/RobotTeam/prepared"
 if !ispath(prepared_path)
     mkpath(prepared_path)
     for dts ∈ collection_dates
@@ -66,7 +66,7 @@ end
 
 
 # now we want to get the "category" for the flight so we can carefully sort by time.
-hsi_path = "/media/jwaczak/LabData/RobotTeam/raw/hsi"
+hsi_path = "/media/teamlary/LabData/RobotTeam/raw/hsi"
 @assert ispath(hsi_path)
 
 
@@ -156,4 +156,3 @@ for (day, categories) ∈ collection_times
 end
 
 
-# now let's go through each boat csv and add the category column

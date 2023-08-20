@@ -1,10 +1,12 @@
 # basepath = "/media/jwaczak/Data/robotteam-data/raw"
-basepath = "/media/jwaczak/LabData/RobotTeam/raw/hsi"
+# basepath = "/media/jwaczak/LabData/RobotTeam/raw/hsi"
+basepath = "/media/teamlary/LabData/RobotTeam/raw/hsi"
 @assert ispath(basepath)
 
 
 # outpath = "/media/jwaczak/Data/robotteam-data/h5"
-outpath = "/media/jwaczak/LabData/RobotTeam/processed/hsi"
+# outpath = "/media/jwaczak/LabData/RobotTeam/processed/hsi"
+outpath = "/media/teamlary/LabData/RobotTeam/processed/hsi"
 if !ispath(outpath)
     mkpath(outpath)
 end
@@ -30,10 +32,10 @@ CollectionsDict = Dict(
         "Dye_1" => [],
         "Dye_2" => [],
     ),
-    "03-24" => Dict(
-        "Demonstration" => [],
-        "Demonstration_long" => [],
-    )
+    # "03-24" => Dict(
+    #     "Demonstration" => [],
+    #     "Demonstration_long" => [],
+    # )
 )
 
 
@@ -54,7 +56,7 @@ z_ground=292.0           # ground height (m)
 isflipped=false          # flip pixel orientation
 Δx = 0.10                # resampling resolution (m)
 is_spec_chunked=false    # chunk HDF5 by pixel
-is_band_chunked=true     # chunk HDF5 by band
+is_band_chunked=false    # chunk HDF5 by band
 
 
 # define bounding box for Scotty's Ranch
