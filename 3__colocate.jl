@@ -15,6 +15,7 @@ if !ispath(outpath)
     mkpath(joinpath(outpath, "11-23"))
     mkpath(joinpath(outpath, "12-09"))
     mkpath(joinpath(outpath, "12-10"))
+    mkpath(joinpath(outpath, "Full"))
 end
 
 
@@ -179,4 +180,25 @@ df_targets = df[idxs_notnans,:]
 CSV.write(joinpath(outpath, "12-10", "Targets.csv"), df_targets)
 CSV.write(joinpath(outpath, "12-10", "Features.csv"), df_features)
 
+
+
+
+# join together
+
+df_targets_1123 = CSV.read(joinpath(outpath, "11-23", "Targets.csv"), DataFrame)
+df_features_1123 = CSV.read(joinpath(outpath, "11-23", "Features.csv"), DataFrame)
+
+
+df_targets_1209 = CSV.read(joinpath(outpath, "12-09", "Targets.csv"), DataFrame)
+df_features_1209 = CSV.read(joinpath(outpath, "12-09", "Features.csv"), DataFrame)
+
+df_targets_1210 = CSV.read(joinpath(outpath, "12-10", "Targets.csv"), DataFrame)
+df_features_1210 = CSV.read(joinpath(outpath, "12-10", "Features.csv"), DataFrame)
+
+
+df_targets = vcat(df_targets_1123, df_targets_1209, df_targets_1210)
+df_features = vcat(df_features_1123, df_features_1209, df_features_1210)
+
+CSV.write(joinpath(outpath, "Full", "Targets.csv"), df_targets)
+CSV.write(joinpath(outpath, "Full", "Features.csv"), df_features)
 
