@@ -595,6 +595,114 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
 end
 
 
+
+
+
+function resample_datacube_fast(hsi::HyperspectralImage; Δx=0.10)
+    # 1. resample to a square grid
+    println("\tgenerating new grid")
+    xs_new, ys_new, Xhsi_is, Xhsi_js, IsInbounds, ij_pixels, ij_notpixels, idx_dict = get_resampled_grid(hsi;Δx=Δx)
+
+    # 2. allocate latitudes and longitudes
+    Longitudes_out= Matrix{Float64}(undef, size(IsInbounds)...)
+    Latitudes_out = Matrix{Float64}(undef, size(IsInbounds)...)
+
+
+    Threads.@threads for j ∈ axes(Longitudes_out,2)
+        for i ∈ axes(Longitudes_out,1)
+            lla = LLAfromUTMZ(wgs84)(UTMZ(xs_new[i], ys_new[j], 0, hsi.zone, hsi.isnorth))
+            Longitudes_out[i,j] = lla.lon
+            Latitudes_out[i,j] = lla.lat
+        end
+    end
+
+
+    # 3. create vector of labels
+
+    varnames = [
+        ["R_"*lpad(idx, 3,"0") for idx ∈ 1:length(hsi.λs)]...,
+        "roll",
+        "pitch",
+        "heading",
+        "view_angle",
+        "solar_azimuth",
+        "solar_elevation",
+        "solar_zenith",
+    ]
+
+    printnames = [
+        ["Reflectance Band "*lpad(idx, 3,"0") for idx ∈ 1:length(hsi.λs)]...,
+        "Roll",
+        "Pitch",
+        "Heading",
+        "Viewing Angle",
+        "Solar Azimuth",
+        "Solar Elevation",
+        "Solar Zenith",
+    ]
+
+    # 4. Allocate Data Matrices
+    Data_μ = Array{Float64}(undef, length(varnames), size(IsInbounds)...);
+
+    # set all out-of-bounds pixels to NaN
+    Data_μ[:,ij_notpixels] .= NaN;
+
+
+    # 5. set up band indices
+    ks_reflectance = 1:length(hsi.λs)
+    k_roll = findfirst(varnames .== "roll")
+    k_pitch = findfirst(varnames .== "pitch")
+    k_heading = findfirst(varnames .== "heading")
+    k_view = findfirst(varnames .== "view_angle")
+    k_az = findfirst(varnames .== "solar_azimuth")
+    k_el = findfirst(varnames .== "solar_elevation")
+    k_zen = findfirst(varnames .== "solar_zenith")
+
+
+    # 6. Resample the data
+    println("\tinterpolating...")
+    Threads.@threads for k ∈ 1:length(ij_pixels)
+        ij = ij_pixels[k]
+
+        # copy reflectance
+        Data_μ[ks_reflectance,ij] = mean(hsi.Reflectance[:,idx_dict[ij]], dims=2)[:,1]
+
+        # copy Roll
+        Data_μ[k_roll,ij] = mean(hsi.Roll[idx_dict[ij]])
+
+        # copy Pitch
+        Data_μ[k_pitch,ij] = mean(hsi.Pitch[idx_dict[ij]])
+
+        # copy Heading
+        Data_μ[k_heading,ij] = mean(hsi.Heading[idx_dict[ij]])
+
+        # copy Viewing Angle
+        Data_μ[k_view,ij] = mean(hsi.ViewAngle[idx_dict[ij]])
+
+        # copy Solar Azimuth
+        Data_μ[k_az,ij] = mean(hsi.SolarAzimuth[idx_dict[ij]])
+
+        # copy Solar Elevation
+        Data_μ[k_el,ij] = mean(hsi.SolarElevation[idx_dict[ij]])
+
+        # copy Solar Zenith
+        Data_μ[k_zen,ij] = mean(hsi.SolarZenith[idx_dict[ij]])
+    end
+
+
+    # add in derived metrics
+    λs = hsi.λs
+
+    return xs_new, ys_new, hsi.isnorth, hsi.zone, Longitudes_out, Latitudes_out, IsInbounds, varnames, printnames, λs, Data_
+
+end
+
+
+
+
+
+
+
 function save_resampled_hsi(
     xs,
     ys,
@@ -654,5 +762,62 @@ function save_resampled_hsi(
         end
 
 
+    end
+end
+
+
+function save_resampled_hsi_fast(
+    xs,
+    ys,
+    isnorth,
+    zone,
+    Longitudes,
+    Latitudes,
+    IsInbounds,
+    varnames,
+    printnames,
+    λs,
+    Data_μ,
+    outpath;
+    Δx=0.10,
+    is_spec_chunked=false,
+    is_band_chunked=false
+    )
+
+    h5open(outpath, "w") do f
+        d = create_group(f, "data-Δx_$(Δx)")
+
+        # save resolution
+        d["Δx"] = Δx
+
+        # write the UTM coords
+        d["X"] = xs
+        d["Y"] = ys
+        d["isnorth"] = isnorth
+        d["zone"] = zone
+
+        # write Lat/Lon grid
+        d["Longitudes"] = Longitudes
+        d["Latitudes"] = Latitudes
+
+        # write pixel-mask
+        d["IsInbounds"] = IsInbounds
+
+        # write variable names
+        d["varnames"] = varnames
+        d["printnames"] = printnames
+
+        # save wavelength values
+        d["λs"] = λs
+
+
+        # save mean data
+        if is_spec_chunked
+            d["Data_μ", chunk=(length(varnames),1,1)] = Data_μ
+        elseif is_band_chunked
+            d["Data_μ", chunk=(1,size(Longitudes)...)] = Data_μ
+        else
+            d["Data_μ"] = Data_μ
+        end
     end
 end

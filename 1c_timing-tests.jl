@@ -17,18 +17,19 @@ f = files[1]
 hsi = HyperspectralImage(f.bilpath, f.bilhdr, f.lcfpath, f.timespath, f.specpath, f.spechdr; isflipped=true);
 
 
-xs, ys, isnorth, zone, Longitudes, Latitudes, IsInbounds, varnames, printnames, λs, Data_μ, Data_σ = resample_datacube(hsi; Δx=Δx)
+# xs, ys, isnorth, zone, Longitudes, Latitudes, IsInbounds, varnames, printnames, λs, Data_μ, Data_σ = resample_datacube(hsi; Δx=Δx)
+xs, ys, isnorth, zone, Longitudes, Latitudes, IsInbounds, varnames, printnames, λs, Data_μ = resample_datacube_fast(hsi; Δx=Δx)
 
 
-idxs = findall(IsInbounds)
-Data_μ[1,idxs[1]]
-eltype(Data_μ)
+# idxs = findall(IsInbounds)
+# Data_μ[1,idxs[1]]
+# eltype(Data_μ)
 
 
 
 
-t = @benchmark HyperspectralImage(f.bilpath, f.bilhdr, f.lcfpath, f.timespath, f.specpath, f.spechdr; isflipped=true);
-tune!(t)
+# t = @benchmark HyperspectralImage(f.bilpath, f.bilhdr, f.lcfpath, f.timespath, f.specpath, f.spechdr; isflipped=true);
+# tune!(t)
 
 
 # make sure to run the timings for multiple values of Δx e.g.  0.05, 0.1, 0.25, 0.5
