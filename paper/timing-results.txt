@@ -1,0 +1,30 @@
+---
+Reflectance conversion for Scotty_1-1
+---
+TrialEstimate(5.389 s)
+
+
+---
+Resampling results for Δx=0.5
+---
+TrialEstimate(1.328 s)
+
+
+---
+Resampling results for Δx=0.25
+---
+TrialEstimate(1.547 s)
+
+
+---
+Resampling results for Δx=0.1
+---
+TrialEstimate(3.557 s)
+
+
+---
+Resampling results for Δx=0.05
+---
+TrialEstimate(9.235 s)
+
+

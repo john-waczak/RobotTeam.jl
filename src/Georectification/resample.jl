@@ -693,7 +693,7 @@ function resample_datacube_fast(hsi::HyperspectralImage; Δx=0.10)
     # add in derived metrics
     λs = hsi.λs
 
-    return xs_new, ys_new, hsi.isnorth, hsi.zone, Longitudes_out, Latitudes_out, IsInbounds, varnames, printnames, λs, Data_
+    return xs_new, ys_new, hsi.isnorth, hsi.zone, Longitudes_out, Latitudes_out, IsInbounds, varnames, printnames, λs, Data_μ
 
 end
 
