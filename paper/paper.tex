@@ -234,8 +234,8 @@ Here we can detail the conversion from radiance to reflectance using the downwel
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=10.5cm]{./assets/georectification.svg}
-    \caption{Georectification procedure.}
+    \includegraphics[width=10.5cm]{./assets/georectification.eps}
+    \caption{Visual representation of scan-line geometry for the drone based hyperspectral imaging platform.}
     \label{fig:georectification}
 \end{figure}
 
@@ -269,7 +269,7 @@ NOTE: we need to update these timings by first copying the HSI to the local driv
 \begin{itemize}
     \item  Create table with processing timings for each step on a typical HSI
     \item Create second table comparing time for full processing including resampling to a variety of scales (e.g. 5 cm, 10 cm, 25 cm) We will want a version of the processing function that does not include the uncertainties and the spectral indices
-    \item create additional table showing size of each of the data producs and their step in the pipeline (ending with a dataproduct like the NDVI)
+    \item create pipeline visualization showing size of each of the data products and their step in the pipeline (ending with a dataproduct like the NDVI)
     \item Create a figure showing the georeferenced image on top of the satellite background 
     \item Create another figure of the entire map with a spectral index applied to one of the dye-release datasets (to demonstrate use for real-time application like oil-spill)
     \item create a figure of a sample HSI datacube in 3-d like from the previous paper with the rgb image on the top. 
