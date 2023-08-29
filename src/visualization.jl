@@ -116,38 +116,41 @@ end
 
 
 
-function vis_cube(hsi; cmap=:rainbow, offset=0.0, shading=false, ibounds=(1,1), jbounds=(1,1))
+function vis_cube(hsi; cmap=:rainbow, offset=0.1, shading=false, ibounds=(1,1), jbounds=(1,1))
     size(hsi.Reflectance)
 
-    data = PermutedDimsArray(hsi.Reflectance, (2, 3, 1))
-    if ibounds != (1,1)
-        imin,imax = ibounds
-        data = data[imin:imax,:,:]
+    data = log10.(permutedims(hsi.Reflectance .+ offset, (2, 3, 1)))
+    dmin, dmax = extrema(data)
+
+    data .= (data .- dmin) ./ (dmax - dmin)
+
+    println(extrema(data))
+
+    if ibounds != (1, 1)
+        imin, imax = ibounds
+        data = data[imin:imax, :, :]
     end
 
-    if jbounds != (1,1)
-        jmin,jmax=jbounds
-        data = data[:,jmin:jmax,:]
+    if jbounds != (1, 1)
+        jmin, jmax = jbounds
+        data = data[:, jmin:jmax, :]
     end
 
 
 
-    # make sure to clip to reasonable values
-    Rmin = minimum(data)
-    Rmax = maximum(data)
+    cg = cgrad(cmap)
 
-    cg = cgrad(cmap, range(Rmin, stop=Rmax, length=256))
-
-    y₋ = [cg[data[i, 1, k] + offset] for i in axes(data, 1), k in axes(data, 3)][:, end:-1:1]
-    y₊ = [cg[data[i, end, k] + offset] for i in axes(data, 1), k in axes(data, 3)][:, :]
+    y₋ = [cg[data[i, 1, k]] for i in axes(data, 1), k in axes(data, 3)][:, end:-1:1]
+    y₊ = [cg[data[i, end, k]] for i in axes(data, 1), k in axes(data, 3)][:, :]
     y_∅ = [RGBA(0, 0, 0, 0) for i in axes(data, 1), k in axes(data, 3)]
 
-    x₋ = [cg[data[1, j, k] + offset] for j in axes(data, 2), k in axes(data, 3)][end:-1:1, end:-1:1]
-    x₊ = [cg[data[end, j, k] + offset] for j in axes(data, 2), k in axes(data, 3)][:, end:-1:1]
+    x₋ = [cg[data[1, j, k]] for j in axes(data, 2), k in axes(data, 3)][end:-1:1, end:-1:1]
+    x₊ = [cg[data[end, j, k]] for j in axes(data, 2), k in axes(data, 3)][:, end:-1:1]
     x_∅ = [RGBA(0, 0, 0, 0) for j in axes(data, 2), k in axes(data, 3)]
 
-    z₋ = [cg[data[i, j, 300] + offset] for i in axes(data, 1), j in axes(data, 2)][end:-1:1, :]
+    z₋ = [cg[data[i, j, 300]] for i in axes(data, 1), j in axes(data, 2)][end:-1:1, :]
     z₊ = getRGB(hsi)
+
     if ibounds != (1,1)
         imin, imax = ibounds
         z₊ = z₊[imin:imax, :]
@@ -194,11 +197,13 @@ function vis_cube(hsi; cmap=:rainbow, offset=0.0, shading=false, ibounds=(1,1), 
 
 
     fig = Figure(; resolution=(1200, 600))
-    ax = Axis3(fig[1, 1],
+    ax = Axis3(
+        fig[1, 1],
         aspect=:data,
         xgridvisible=false,
         ygridvisible=false,
         perspectiveness=1,
+        elevation = 3π / 16,
     )
     hidedecorations!(ax)
     hidespines!(ax)

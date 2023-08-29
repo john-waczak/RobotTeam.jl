@@ -30,7 +30,9 @@ fig, ax, hm = heatmap(img)
 size(img)
 
 
-fig = vis_cube(hsi; cmap=:batlow, offset=0.0, ibounds=(250,1600))
+# heatmap(log10.(hsi.Reflectance[:,:,1]))
+
+fig = vis_cube(hsi; cmap=:jet, offset=0.1, ibounds=(250,1600))
 save("demo-cube.png", fig)
 
 
@@ -42,14 +44,23 @@ xs, ys, isnorth, zone, Longitudes, Latitudes, IsInbounds, varnames, printnames, 
 
 data = PermutedDimsArray(Data_μ[1:462,:,:], (2, 3, 1))
 
+ij_pixels = findall(IsInbounds[1:462,:,:])
 
+offset = 0.1
+data = log10.(data .+ offset)
+# dmin, dmax = extrema(data[ij_pixels])
+# data .= (data .- dmin) ./ (dmax = dmin)
+
+# cg = cgrad(:jet)
+
+size(data)
+data_plot = @view data[100:end,:,:]
 
 fig = Figure(; resolution=(1200,600))
 ax = Axis3(fig[1, 1],
-           # aspect=:data,
-           #xgridvisible=false,
-           #ygridvisible=false,
            perspectiveness=1,
+           elevation=3π/16-π/32,
+           azimuth=3π/4
            )
 hidedecorations!(ax)
 hidespines!(ax)
@@ -59,9 +70,10 @@ hidespines!(ax)
     mesh!(
         ax,
         mr;
-        color = data[:,:,k],
+        color = data_plot[:,:,k],
         interpolate=false,
-        colormap = :rainbow,
+        colormap = :jet,
+        shading=false
         )
 
 end
@@ -69,13 +81,15 @@ end
 ij_pixels = findall(IsInbounds)
 Ref_img = getRGB(Data_μ, λs, ij_pixels)
 
+Ref_img = Ref_img[100:end, :]
+
 mr = Rect3f(Vec3f(0,0,462*Δx), Vec3f(length(xs)*Δx, length(ys)*Δx, Δx))
 mesh!(
     ax,
     mr;
     color= Ref_img,
     interpolate=false,
-    colormap = :rainbow,
+    shading=false,
 )
 
 save("demo-rectified-cube.png", fig)
