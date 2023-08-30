@@ -250,13 +250,18 @@ Here we can detail the conversion from radiance to reflectance using the downwel
 \section{Results}
 
 \begin{figure}[H]
-    \includegraphics[width=10.5 cm]{./figures/timing.eps}
-\caption{This is a figure. Schemes follow the same formatting. If there are multiple panels, they should be listed as: (\textbf{a}) Description of what is contained in the first panel. (\textbf{b}) Description of what is contained in the second panel. Figures should be placed in the main text near to the first time they are cited. A caption on a single line should be centered.\label{fig1}}
-\end{figure}   
+    \includegraphics[width=10.5 cm]{./figures/regrid-timing.eps}
+\caption{This is a figure. Schemes follow the same formatting. If there are multiple panels, they should be listed as: (\textbf{a}) Description of what is contained in the first panel. (\textbf{b}) Description of what is contained in the second panel. Figures should be placed in the main text near to the first time they are cited. A caption on a single line should be centered.\label{fig-regridding-timing}}
+\end{figure}
+
+\begin{figure}[H]
+  \includegraphics[width=10.5 cm]{./figures/reflectance-timing.eps}
+  \caption{Description \label{fig-reflectance-timing}}
+\end{figure}
 
 NOTE: we need to update these timings by first copying the HSI to the local drive (off of the external hard drive). This will probably have some effect on the read/write speeds for the test.
 
-\begin{table}[H] 
+\begin{table}[H]
 \caption{Resampling times as a function of pixel resolution.\label{tab1}}
 \newcolumntype{C}{>{\centering\arraybackslash}X}
 \begin{tabularx}{\textwidth}{CC}
@@ -270,6 +275,23 @@ NOTE: we need to update these timings by first copying the HSI to the local driv
 \bottomrule
 \end{tabularx}
 \end{table}
+
+
+\begin{table}[H]
+  \caption{Loading and Reflectance Conversion Times.\label{tab1}}
+  \newcolumntype{C}{>{\centering\arraybackslash}X}
+  \begin{tabularx}{\textwidth}{CC}
+    \toprule
+    \textbf{Number of scan lines}	& \textbf{Execution time (s)}\\
+    \midrule
+    371		&   2.049	\\
+    725    &   4.219	\\
+    1000     &   5.875   \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+
 
 
 \textbf{NOTE} Stuff to do in this section:
