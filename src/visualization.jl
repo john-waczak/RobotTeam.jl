@@ -6,12 +6,13 @@ using Images
 using HDF5
 using GLMakie
 using GeometryBasics
+using ProgressMeter
+using Statistics
 
 export process_image
-export generateRGB!
 export getRGB
 export vis_cube
-
+export vis_rectified_cube
 
 function process_image(img;α=10.0,β=0.0)
     # see example: https://www.satmapper.hu/en/rgb-images/
@@ -116,7 +117,7 @@ end
 
 
 
-function vis_cube(hsi; cmap=:rainbow, offset=0.1, shading=false, ibounds=(1,1), jbounds=(1,1))
+function vis_cube(hsi; cmap=:jet, offset=0.1, shading=false, ibounds=(1,1), jbounds=(1,1), resolution=(800,600), azimuth=-π/4, elevation=3π/16)
     size(hsi.Reflectance)
 
     data = log10.(permutedims(hsi.Reflectance .+ offset, (2, 3, 1)))
@@ -196,14 +197,15 @@ function vis_cube(hsi; cmap=:rainbow, offset=0.1, shading=false, ibounds=(1,1), 
     ]
 
 
-    fig = Figure(; resolution=(1200, 600))
+    fig = Figure(; resolution=resolution, backgroundcolor=RGBA(0,0,0,0))
     ax = Axis3(
         fig[1, 1],
         aspect=:data,
         xgridvisible=false,
         ygridvisible=false,
         perspectiveness=1,
-        elevation = 3π / 16,
+        elevation = elevation,
+        azimuth = azimuth,
     )
     hidedecorations!(ax)
     hidespines!(ax)
@@ -217,6 +219,86 @@ function vis_cube(hsi; cmap=:rainbow, offset=0.1, shading=false, ibounds=(1,1), 
     return fig
 end
 
+
+
+function vis_rectified_cube(Data_μ, xs, ys, IsInbounds, λs, Δx; ibounds=(1, 1), jbounds=(1, 1), offset = 0.1, colormap=:jet, resolution=(800, 600), azimuth=3π / 4, elevation=3π / 16, colorbar=false)
+
+    nλs = length(λs)
+
+    println("\tGenerating RGB view...")
+    ij_pixels = findall(IsInbounds)
+    Ref_img = getRGB(Data_μ, λs, ij_pixels)
+
+    println("\tReshaping data for plotting...")
+    data = PermutedDimsArray(Data_μ[1:nλs, :, :], (2, 3, 1))
+
+    println("\tApplying log10...")
+    data = log10.(data .+ offset)
+
+    idx_not_nan_or_inf = findall(.!(isnan.(data)) .&& .!(isinf.(data)))
+    Rmin = quantile(data[idx_not_nan_or_inf], 0.1)
+    Rmax = quantile(data[idx_not_nan_or_inf], 0.99)
+
+    println("\t 0.10 quantile log10 reflectance: ", Rmin)
+    println("\t 0.99 quantile log10 reflectance: ", Rmax)
+
+    if ibounds != (1, 1)
+        imin, imax = ibounds
+        data = data[imin:imax, :, :]
+        Ref_img = Ref_img[imin:imax, :]
+    end
+
+    if jbounds != (1, 1)
+        jmin, jmax = jbounds
+        data = data[:, jmin:jmax, :]
+        Ref_img = Ref_img[:, jmin:jmax]
+    end
+
+
+    println("\tGenerating visualition...")
+    fig = Figure(; resolution=resolution)
+    ax = Axis3(
+        fig[1, 1],
+        perspectiveness=0.5,
+        elevation=elevation,
+        azimuth=azimuth,
+        tellheight=true,
+        tellwidth=true,
+        # aspect=:data,
+    )
+
+    hidedecorations!(ax)
+    hidespines!(ax)
+
+    @showprogress for k in 1:length(λs)
+        mr = Rect3f(Vec3f(0,0,(k-1)*Δx), Vec3f(length(xs)*Δx, length(ys)*Δx, Δx))
+        mesh!(
+            ax,
+            mr;
+            color = data[:,:,k],
+            interpolate=false,
+            colormap = colormap,
+            colorrange= (Rmin, Rmax),
+            shading=false,
+            )
+
+    end
+
+    mr = Rect3f(Vec3f(0,0,462*Δx), Vec3f(length(xs)*Δx, length(ys)*Δx, Δx))
+    mesh!(
+        ax,
+        mr;
+        color= Ref_img,
+        interpolate=false,
+        shading=false,
+    )
+
+    if colorbar
+        Colorbar(fig[1, 2], limits=(Rmin, Rmax), colormap=colormap, label="log10(Reflectance)", height=Relative(0.5), tellwidth=true)
+    end
+
+    return fig
+end
 
 
 

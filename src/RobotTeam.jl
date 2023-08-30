@@ -34,7 +34,6 @@ export importAirMar, importCOM1, importCOM2, importCOM3, importLISST, importNMEA
 
 include("visualization.jl")
 using .Visualization
-export process_image, generateRGB!, getRGB, vis_cube
-
+export process_image, getRGB, vis_cube, vis_rectified_cube
 
 end
