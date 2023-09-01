@@ -46,3 +46,29 @@ function get_background_satmap(w::Float64, e::Float64, s::Float64, n::Float64; o
     )
 end
 
+
+
+# metric bounds
+metric_bounds = Dict(
+    "mNDWI" => (-1, 1),
+    "NDVI" => (-1 ,1),
+    "SR" => (0, 30),
+    "EVI" => (-1, 1),
+    "AVRI" => (-1, 1),
+    "NDVI_705" => (-1,1),
+    "MSR_705" => (0, 30),
+    "MNDVI" => (-1, 1),
+    "VOG1" => (0, 20),
+    "VOG2" => (0, 20),
+    "VOG3" => (0, 20),
+    "PRI" => (-1,1),
+    "SIPI" => (0, 2),
+    "PSRI" => (-1, 1),
+    "CRI1" => (0, 15),
+    "CRI2" => (0, 15),
+    "ARI1" => (0, 0.2),
+    "ARI2" => (0, 0.2),
+    "WBI" => (0.5, 1.5),
+    "MCRI" => (0, 15),
+    "TCARI" => (0, 15)
+)

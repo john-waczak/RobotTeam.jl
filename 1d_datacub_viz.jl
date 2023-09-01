@@ -159,7 +159,78 @@ save("./paper/figures/reflectance-sample.pdf", fig)
 fig
 
 # plot single HSI on map (1209 Dye_1-6)
+varnames[indices_metrics[1]]
+m1 = Data_μ[indices_metrics[1],:,:]
 
-# plot spectral indices filtered to water-only pixels
+thresh_h2o = 0.25
+idxs_h2o = findall(m1 .≥ thresh_h2o)
+idxs_land = findall(m1 .< thresh_h2o)
+
+m1[idxs_land] .= NaN
+
+fig = Figure(;resolution=size_in_pixels);
+ax = CairoMakie.Axis(fig[1,1], xlabel="Longitude", ylabel="Latitude", title=printnames[indices_metrics[1]]);
+hm = heatmap!(ax, satmap.w..satmap.e, satmap.s..satmap.n, satmap.img)
+hm2 = heatmap!(ax, Longitudes, Latitudes, m1, clims=metric_bounds[varnames[indices_metrics[1]]])
+fig
+
+
+# loop through and make maps
+for (day, runs) ∈ CollectionsDict
+    for (run, fs) ∈ runs
+        println("Working on $run")
+
+        savepath = joinpath(outpath, day, run, "maps")
+        if !ispath(savepath)
+            mkpath(savepath)
+        end
+
+        # loop over all metrics
+        for idx ∈ indices_metrics
+            println("\t$(printnames[idx])")
+
+            # set up plot
+            size_in_inches = (4, 3)
+            dpi = 400
+            size_in_pixels = size_in_inches .* dpi
+            f = Figure(resolution=size_in_pixels)
+            ax = CairoMakie.Axis(f[1,1], xlabel="longitude", ylabel="latitude", title="$day")
+            heatmap!(ax, satmap.w..satmap.e, satmap.s..satmap.n, satmap.img)
+            xlims!(ax, -97.7168, -97.7125)
+            ylims!(ax, 33.70075, 33.7035)
+
+            # loop over each file in the run and add the values
+            for f ∈ fs
+                fname = split(f.lcfpath, "/")[end-1]
+                h5path = joinpath(outpath, day, run, fname * ".h5")
+                println("\t\tplotting $(h5path)")
+
+                try
+                    h5open(h5path, "r") do h5
+                        Latitudes = h5["data-Δx_$(Δx)/Latitudes"][:,:]
+                        Longitudes = h5["data-Δx_$(Δx)/Longitudes"][:,:]
+                        Data = h5["data-Δx_$(Δx)/Data_μ"][idx,:,:]
+
+                        heatmap!(ax, Longitudes, Latitudes, Data; clims=metric_bounds[varnames[idx]])
+                        f
+                    end
+                catch e
+                    println("\n")
+                    println("FAILED: ", h5path)
+                    println(e)
+                    println("\n")
+                end
+            end
+
+            cb = Colorbar(f[1,2], limits=metric_bounds[varnames[idx]], label="$(printnames[idx])")
+
+            # save the figure
+            png_path = joinpath(savepath, "map_$(varnames[idx]).png")
+            save(png_path, f)
+        end
+
+   end
+end
+
 
 
