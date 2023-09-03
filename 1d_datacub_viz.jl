@@ -50,7 +50,6 @@ printnames = read(h5["data-Δx_0.1/printnames"])
 
 indices_metrics = findfirst(x-> x=="mNDWI", varnames):length(varnames)
 
-spec_R = Data_μ[1:]
 
 size_in_inches = (4, 3)
 dpi = 300
@@ -187,6 +186,8 @@ for (day, runs) ∈ CollectionsDict
 
         # loop over all metrics
         for idx ∈ indices_metrics
+            GC.gc()
+
             println("\t$(printnames[idx])")
 
             # set up plot
