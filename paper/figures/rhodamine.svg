@@ -1,0 +1,63 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="180" height="180" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" zoomAndPan="magnify" preserveAspectRatio="xMidyMid" contentScriptType="application/ecmascript" id="c3f3bbb6-4a64-11ee-97b9-7cd30ac76ef6">
+<g>
+	<title>C28H31N2O3</title>
+	<desc content="structured text">C28H31N2O3</desc>
+	<!-- C28H31N2O3 -->
+	<rect x="0.5" y="0.5" width="179" height="179" stroke="#000000" stroke-width="1" fill="none"/>
+	<text x="142.327" y="118.544" fill="#000000" font-family="Helvetica" font-size="7.7pt" text-anchor="middle" font-weight="bold">N</text>
+	<text x="37.6732" y="118.544" fill="#000000" font-family="Helvetica" font-size="7.7pt" text-anchor="middle" font-weight="bold">N</text>
+	<text x="90.0007" y="118.187" fill="#000000" font-family="Helvetica" font-size="7.7pt" text-anchor="middle" font-weight="bold">O</text>
+	<text x="128.51" y="66.307" fill="#000000" font-family="Helvetica" font-size="7.7pt" text-anchor="middle" font-weight="bold">O</text>
+	<text x="115.674" y="44.0727" fill="#000000" font-family="Helvetica" font-size="7.7pt" text-anchor="middle" font-weight="bold">O</text>
+	<line x1="168" y1="116.193" x2="155.192" y2="108.733" stroke="#000000" stroke-width="1.04624" />
+	<line x1="155.192" y1="108.733" x2="146.552" y2="113.677" stroke="#000000" stroke-width="1.04624" />
+	<line x1="142.31" y1="120.483" x2="142.269" y2="130.917" stroke="#000000" stroke-width="1.04624" />
+	<line x1="142.269" y1="130.917" x2="155.077" y2="138.377" stroke="#000000" stroke-width="1.04624" />
+	<line x1="138.102" y1="113.633" x2="129.518" y2="108.634" stroke="#000000" stroke-width="1.04624" />
+	<line x1="129.518" y1="108.634" x2="116.087" y2="116.25" stroke="#000000" stroke-width="1.04624" />
+	<line x1="126.327" y1="107.701" x2="116.925" y2="113.032" stroke="#000000" stroke-width="1.04624" />
+	<line x1="116.087" y1="116.25" x2="102.837" y2="108.325" stroke="#000000" stroke-width="1.04624" />
+	<line x1="102.837" y1="108.325" x2="102.837" y2="93.5026" stroke="#000000" stroke-width="1.04624" />
+	<line x1="105.223" y1="106.102" x2="105.223" y2="95.7261" stroke="#000000" stroke-width="1.04624" />
+	<line x1="102.837" y1="93.5026" x2="116.087" y2="85.5769" stroke="#000000" stroke-width="1.04624" />
+	<line x1="116.087" y1="85.5769" x2="129.518" y2="93.1928" stroke="#000000" stroke-width="1.04624" />
+	<line x1="116.925" y1="88.7947" x2="126.327" y2="94.1259" stroke="#000000" stroke-width="1.04624" />
+	<line x1="129.518" y1="108.634" x2="129.518" y2="93.1928" stroke="#000000" stroke-width="1.04624" />
+	<line x1="102.837" y1="93.5026" x2="90.0007" y2="86.0912" stroke="#000000" stroke-width="1.04624" />
+	<line x1="90.0007" y1="86.0912" x2="77.1627" y2="93.5026" stroke="#000000" stroke-width="1.04624" />
+	<line x1="89.2679" y1="89.2692" x2="80.2813" y2="94.4572" stroke="#000000" stroke-width="1.04624" />
+	<line x1="77.1627" y1="93.5026" x2="63.9125" y2="85.5769" stroke="#000000" stroke-width="1.04624" />
+	<line x1="63.9125" y1="85.5769" x2="50.4816" y2="93.1928" stroke="#000000" stroke-width="1.04624" />
+	<line x1="63.0748" y1="88.7947" x2="53.6731" y2="94.1259" stroke="#000000" stroke-width="1.04624" />
+	<line x1="50.4816" y1="93.1928" x2="50.4816" y2="108.634" stroke="#000000" stroke-width="1.04624" />
+	<line x1="49.8812" y1="107.603" x2="41.8984" y2="112.253" stroke="#000000" stroke-width="1.04624" />
+	<line x1="51.082" y1="109.665" x2="41.8984" y2="115.014" stroke="#000000" stroke-width="1.04624" />
+	<line x1="33.4479" y1="113.677" x2="24.8084" y2="108.733" stroke="#000000" stroke-width="1.04624" />
+	<line x1="24.8084" y1="108.733" x2="12" y2="116.193" stroke="#000000" stroke-width="1.04624" />
+	<line x1="37.6903" y1="120.483" x2="37.731" y2="130.917" stroke="#000000" stroke-width="1.04624" />
+	<line x1="37.731" y1="130.917" x2="24.9226" y2="138.377" stroke="#000000" stroke-width="1.04624" />
+	<line x1="50.4816" y1="108.634" x2="63.9125" y2="116.25" stroke="#000000" stroke-width="1.04624" />
+	<line x1="63.9125" y1="116.25" x2="77.1627" y2="108.325" stroke="#000000" stroke-width="1.04624" />
+	<line x1="64.6755" y1="113.013" x2="73.9506" y2="107.466" stroke="#000000" stroke-width="1.04624" />
+	<line x1="77.1627" y1="93.5026" x2="77.1627" y2="108.325" stroke="#000000" stroke-width="1.04624" />
+	<line x1="77.1627" y1="108.325" x2="85.1306" y2="112.925" stroke="#000000" stroke-width="1.04624" />
+	<line x1="102.837" y1="108.325" x2="94.8709" y2="112.925" stroke="#000000" stroke-width="1.04624" />
+	<line x1="90.0007" y1="86.0912" x2="90.0007" y2="71.2684" stroke="#000000" stroke-width="1.04624" />
+	<line x1="90.0007" y1="71.2684" x2="77.1627" y2="63.857" stroke="#000000" stroke-width="1.04624" />
+	<line x1="89.2679" y1="68.0904" x2="80.2813" y2="62.9024" stroke="#000000" stroke-width="1.04624" />
+	<line x1="77.1627" y1="63.857" x2="77.1627" y2="49.0341" stroke="#000000" stroke-width="1.04624" />
+	<line x1="77.1627" y1="49.0341" x2="90.0007" y2="41.6227" stroke="#000000" stroke-width="1.04624" />
+	<line x1="80.2813" y1="49.9887" x2="89.2679" y2="44.8007" stroke="#000000" stroke-width="1.04624" />
+	<line x1="90.0007" y1="41.6227" x2="102.837" y2="49.0341" stroke="#000000" stroke-width="1.04624" />
+	<line x1="102.837" y1="49.0341" x2="102.837" y2="63.857" stroke="#000000" stroke-width="1.04624" />
+	<line x1="100.451" y1="51.2575" x2="100.451" y2="61.6335" stroke="#000000" stroke-width="1.04624" />
+	<line x1="90.0007" y1="71.2684" x2="102.837" y2="63.857" stroke="#000000" stroke-width="1.04624" />
+	<line x1="102.837" y1="63.857" x2="115.674" y2="56.4455" stroke="#000000" stroke-width="1.04624" />
+	<line x1="115.077" y1="57.4787" x2="123.64" y2="62.4226" stroke="#000000" stroke-width="1.04624" />
+	<line x1="116.27" y1="55.4124" x2="123.64" y2="59.6676" stroke="#000000" stroke-width="1.04624" />
+	<line x1="115.674" y1="56.4455" x2="115.674" y2="46.0116" stroke="#000000" stroke-width="1.04624" />
+	<text x="37.6732" y="108.261" fill="#000000" font-family="Helvetica" font-size="6pt" text-anchor="middle" font-weight="bold">+</text>
+</g>
+</svg>
