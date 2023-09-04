@@ -55,7 +55,7 @@ size_in_inches = (4, 3)
 dpi = 300
 size_in_pixels = size_in_inches .* dpi
 
-fig = Figure(;resolution=size_in_pixels)
+fig = Figure(;resolution=size_in_pixels, figure_padding=50)
 ax = CairoMakie.Axis(fig[1,1], xlabel="Longitude", ylabel="Latitude")
 hm = heatmap!(ax, satmap.w..satmap.e, satmap.s..satmap.n, satmap.img)
 
@@ -64,6 +64,8 @@ hm_rgb = heatmap!(ax, Longitudes, Latitudes, rgb)
 
 xlims!(ax, -97.717, -97.715)
 ylims!(ax, 33.7015, 33.7025)
+
+fig
 
 save("./paper/figures/georectified-hsi-plume.png", fig)
 
@@ -174,64 +176,150 @@ hm2 = heatmap!(ax, Longitudes, Latitudes, m1, clims=metric_bounds[varnames[indic
 fig
 
 
-# loop through and make maps
-for (day, runs) ∈ CollectionsDict
-    for (run, fs) ∈ runs
-        println("Working on $run")
 
-        savepath = joinpath(outpath, day, run, "maps")
-        if !ispath(savepath)
-            mkpath(savepath)
-        end
 
-        # loop over all metrics
-        for idx ∈ indices_metrics
-            GC.gc()
+# make a map for a single collection 12-09 Dye_1
+varnames[indices_metrics[1]]
+varnames[indices_metrics[2]]
 
-            println("\t$(printnames[idx])")
+h2o_thresh = 0.25
+idx_mndwi = indices_metrics[1]
+idx = indices_metrics[1]
+# idx = argmin(abs.(λs .- 630.0))
 
-            # set up plot
-            size_in_inches = (4, 3)
-            dpi = 400
-            size_in_pixels = size_in_inches .* dpi
-            f = Figure(resolution=size_in_pixels)
-            ax = CairoMakie.Axis(f[1,1], xlabel="longitude", ylabel="latitude", title="$day")
-            heatmap!(ax, satmap.w..satmap.e, satmap.s..satmap.n, satmap.img)
-            xlims!(ax, -97.7168, -97.7125)
-            ylims!(ax, 33.70075, 33.7035)
+# set up plot
+size_in_inches = (4, 3)
+dpi = 400
+size_in_pixels = size_in_inches .* dpi
+f = Figure(resolution=size_in_pixels)
+ax = CairoMakie.Axis(
+    f[1, 1],
+    xlabel="Longitude",
+    ylabel="Latitude",
+    xticklabelsize=20,
+    yticklabelsize = 20,
+    xlabelsize = 25,
+    ylabelsize = 25,
+    titlesize = 30,
+)
 
-            # loop over each file in the run and add the values
-            for f ∈ fs
-                fname = split(f.lcfpath, "/")[end-1]
-                h5path = joinpath(outpath, day, run, fname * ".h5")
-                println("\t\tplotting $(h5path)")
+heatmap!(ax, satmap.w .. satmap.e, satmap.s .. satmap.n, satmap.img)
+xlims!(ax, -97.7168, -97.7125)
+ylims!(ax, 33.70075, 33.7035)
 
-                try
-                    h5open(h5path, "r") do h5
-                        Latitudes = h5["data-Δx_$(Δx)/Latitudes"][:,:]
-                        Longitudes = h5["data-Δx_$(Δx)/Longitudes"][:,:]
-                        Data = h5["data-Δx_$(Δx)/Data_μ"][idx,:,:]
+f
 
-                        heatmap!(ax, Longitudes, Latitudes, Data; clims=metric_bounds[varnames[idx]])
-                        f
-                    end
-                catch e
-                    println("\n")
-                    println("FAILED: ", h5path)
-                    println(e)
-                    println("\n")
-                end
+
+
+day = "12-09"
+run = "Dye_1"
+
+for f ∈ CollectionsDict[day][run]
+    fname = split(f.lcfpath, "/")[end-1]
+
+    if !(fname ∈ [
+        run * "-20",
+        run * "-21",
+        run * "-22",
+    ])
+
+        h5path = joinpath(outpath, day, run, fname * ".h5")
+        println("\t\tplotting $(h5path)")
+        try
+            h5open(h5path, "r") do h5
+                Latitudes = h5["data-Δx_$(Δx)/Latitudes"][:, :]
+                Longitudes = h5["data-Δx_$(Δx)/Longitudes"][:, :]
+                Data_mndwi = h5["data-Δx_$(Δx)/Data_μ"][idx_mndwi, :, :]
+                Data = h5["data-Δx_$(Δx)/Data_μ"][idx, :, :]
+
+                # get indices of non-water pixels
+                idx_not_h2o = findall(Data_mndwi .< h2o_thresh)
+                # set value to NaN for non-water
+                Data[idx_not_h2o] .= NaN
+
+                heatmap!(ax, Longitudes, Latitudes, Data; clims=metric_bounds[varnames[idx]])
+                # heatmap!(ax, Longitudes, Latitudes, Data; clims=(0, 1))
+                f
             end
-
-            cb = Colorbar(f[1,2], limits=metric_bounds[varnames[idx]], label="$(printnames[idx])")
-
-            # save the figure
-            png_path = joinpath(savepath, "map_$(varnames[idx]).png")
-            save(png_path, f)
+        catch e
+          println("\n")
+          println("FAILED: ", h5path)
+          println(e)
+          println("\n")
         end
-
-   end
+    end
 end
+
+
+# create colorbar
+cb = Colorbar(f[1,2], limits=metric_bounds[varnames[idx]], label="$(printnames[idx])", labelsize=25, ticklabelsize=20)
+
+f
+
+save("paper/figures/mNDWI_example.png", f)
+
+
+
+# loop over all data and create maps
+
+# # loop through and make maps
+# for (day, runs) ∈ CollectionsDict
+#     for (run, fs) ∈ runs
+#         println("Working on $run")
+
+#         savepath = joinpath(outpath, day, run, "maps")
+#         if !ispath(savepath)
+#             mkpath(savepath)
+#         end
+
+#         # loop over all metrics
+#         for idx ∈ indices_metrics
+#             GC.gc()
+
+#             println("\t$(printnames[idx])")
+
+#             # set up plot
+#             size_in_inches = (4, 3)
+#             dpi = 400
+#             size_in_pixels = size_in_inches .* dpi
+#             f = Figure(resolution=size_in_pixels)
+#             ax = CairoMakie.Axis(f[1,1], xlabel="longitude", ylabel="latitude", title="$day")
+#             heatmap!(ax, satmap.w..satmap.e, satmap.s..satmap.n, satmap.img)
+#             xlims!(ax, -97.7168, -97.7125)
+#             ylims!(ax, 33.70075, 33.7035)
+
+#             # loop over each file in the run and add the values
+#             for f ∈ fs
+#                 fname = split(f.lcfpath, "/")[end-1]
+#                 h5path = joinpath(outpath, day, run, fname * ".h5")
+#                 println("\t\tplotting $(h5path)")
+
+#                 try
+#                     h5open(h5path, "r") do h5
+#                         Latitudes = h5["data-Δx_$(Δx)/Latitudes"][:,:]
+#                         Longitudes = h5["data-Δx_$(Δx)/Longitudes"][:,:]
+#                         Data = h5["data-Δx_$(Δx)/Data_μ"][idx,:,:]
+
+#                         heatmap!(ax, Longitudes, Latitudes, Data; clims=metric_bounds[varnames[idx]])
+#                         f
+#                     end
+#                 catch e
+#                     println("\n")
+#                     println("FAILED: ", h5path)
+#                     println(e)
+#                     println("\n")
+#                 end
+#             end
+
+#             cb = Colorbar(f[1,2], limits=metric_bounds[varnames[idx]], label="$(printnames[idx])")
+
+#             # save the figure
+#             png_path = joinpath(savepath, "map_$(varnames[idx]).png")
+#             save(png_path, f)
+#         end
+
+#    end
+# end
 
 
 
