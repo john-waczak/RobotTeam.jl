@@ -1,21 +1,21 @@
 ---
 Reflectance conversion for Dye_1-6
 ---
-TrialEstimate(4.219 s)
+TrialEstimate(4.227 s)
 n-scanlines: 725
 
 
 ---
 Reflectance conversion for NoDye_1
 ---
-TrialEstimate(2.049 s)
+TrialEstimate(2.060 s)
 n-scanlines: 371
 
 
 ---
 Reflectance conversion for Scotty_1-1
 ---
-TrialEstimate(5.875 s)
+TrialEstimate(5.901 s)
 n-scanlines: 1000
 
 
@@ -23,24 +23,36 @@ The following timings used a cube of length 1000
 ---
 Resampling results for Δx=0.5
 ---
-TrialEstimate(1.402 s)
+TrialEstimate(1.434 s)
 
 
 ---
-Resampling results for Δx=0.25
+Resampling results for Δx=0.4
 ---
-TrialEstimate(1.641 s)
+TrialEstimate(1.545 s)
+
+
+---
+Resampling results for Δx=0.3
+---
+TrialEstimate(1.673 s)
+
+
+---
+Resampling results for Δx=0.2
+---
+TrialEstimate(1.802 s)
 
 
 ---
 Resampling results for Δx=0.1
 ---
-TrialEstimate(3.548 s)
+TrialEstimate(4.026 s)
 
 
 ---
 Resampling results for Δx=0.05
 ---
-TrialEstimate(9.745 s)
+TrialEstimate(10.537 s)
 
 
