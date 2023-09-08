@@ -7,11 +7,11 @@ using MintsMakieRecipes
 set_theme!(mints_theme)
 
 my_theme = mints_theme
-my_theme.Axis.xticklabelsize=17
-my_theme.Axis.yticklabelsize=17
-my_theme.Axis.xlabelsize=20
-my_theme.Axis.ylabelsize=20
-my_theme.Axis.titlesize=22
+my_theme.Axis.xticklabelsize=20
+my_theme.Axis.yticklabelsize=20
+my_theme.Axis.xlabelsize=22
+my_theme.Axis.ylabelsize=22
+my_theme.Axis.titlesize=25
 set_theme!(my_theme)
 
 
@@ -47,6 +47,9 @@ varnames = read(h5["data-Δx_0.1/varnames"])
 printnames = read(h5["data-Δx_0.1/printnames"])
 λs = read(h5["data-Δx_0.1/λs"])
 
+rgb = getRGB(h5)
+
+close(h5)
 
 indices_metrics = findfirst(x-> x=="mNDWI", varnames):length(varnames)
 
@@ -59,7 +62,6 @@ fig = Figure(;resolution=size_in_pixels, figure_padding=50)
 ax = CairoMakie.Axis(fig[1,1], xlabel="Longitude", ylabel="Latitude")
 hm = heatmap!(ax, satmap.w..satmap.e, satmap.s..satmap.n, satmap.img)
 
-rgb = getRGB(h5)
 hm_rgb = heatmap!(ax, Longitudes, Latitudes, rgb)
 
 xlims!(ax, -97.717, -97.715)
@@ -71,7 +73,6 @@ save("./paper/figures/georectified-hsi-plume.png", fig)
 
 fig
 
-close(h5)
 
 # plot radiance, irradiance, and reflectance for single HSI (12-09 Dye_1-6) for a slice from the plume
 fpath = "/media/teamlary/LabData/RobotTeam/raw/hsi/12-09/Dye_1-6"
@@ -158,6 +159,7 @@ save("./paper/figures/reflectance-sample.svg", fig)
 save("./paper/figures/reflectance-sample.eps", fig)
 save("./paper/figures/reflectance-sample.pdf", fig)
 fig
+
 
 # plot single HSI on map (1209 Dye_1-6)
 varnames[indices_metrics[1]]
