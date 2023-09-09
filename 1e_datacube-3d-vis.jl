@@ -6,17 +6,23 @@ using MintsMakieRecipes
 using ProgressMeter
 using Statistics
 
-set_theme!(mints_theme)
-my_theme = mints_theme
-my_theme.Axis.xticklabelsize = 20
-my_theme.Axis.yticklabelsize = 20
-my_theme.Axis.xlabelsize = 22
-my_theme.Axis.ylabelsize = 22
-my_theme.Axis.titlesize = 25
-my_theme.Colorbar.ticklabelsize=20
-my_theme.Colorbar.labelsize=22
-set_theme!(my_theme)
 
+set_theme!(mints_theme)
+
+update_theme!(
+    figure_padding=30,
+    Axis=(
+        xticklabelsize=20,
+        yticklabelsize=20,
+        xlabelsize=22,
+        ylabelsize=22,
+        titlesize=25,
+    ),
+    Colorbar=(
+        ticklabelsize=20,
+        labelsize=22
+    )
+)
 
 
 include("utils/vis_tools.jl")
@@ -71,7 +77,6 @@ save("./paper/figures/demo-rectified-cube.png", fig)
 # plot reflectance of slice through the plume
 using CairoMakie
 
-set_theme!(figure_padding = 30)
 
 data = log10.(Data_μ[1:462,:,:])
 idx_not_nan_or_inf = findall(.!(isnan.(data)) .&& .!(isinf.(data)))
@@ -119,6 +124,7 @@ leg = axislegend(
     position=:lt,
 )
 xlims!(λs[1], λs[end])
+ylims!(0, nothing)
 fig
 
 save("./paper/figures/reflectance-samples.png", fig)
@@ -132,6 +138,7 @@ fig2 = Figure();
 ax = CairoMakie.Axis(fig2[1, 1], xlabel="λ (nm)", ylabel="Reflectance");
 ls = lines!(ax, λs, Data_μ[1:462, idx_plume], color=data[1:462, idx_plume], colormap=:jet, colorrange=(Rmin, Rmax), linewidth=3.5)
 xlims!(λs[1], λs[end])
+ylims!(0, nothing)
 fig2
 
 save("./paper/figures/reflectance-plume.png", fig2)
@@ -145,6 +152,7 @@ fig2 = Figure();
 ax = CairoMakie.Axis(fig2[1, 1], xlabel="λ (nm)", ylabel="Reflectance");
 ls = lines!(ax, λs, Data_μ[1:462, idx_water], color=data[1:462, idx_water], colormap=:jet, colorrange=(Rmin, Rmax), linewidth=3.5)
 xlims!(λs[1], λs[end])
+ylims!(0, nothing)
 fig2
 
 save("./paper/figures/reflectance-water.png", fig2)
@@ -160,6 +168,7 @@ fig2 = Figure();
 ax = CairoMakie.Axis(fig2[1, 1], xlabel="λ (nm)", ylabel="Reflectance");
 ls = lines!(ax, λs, Data_μ[1:462, idx_algae], color=data[1:462, idx_algae], colormap=:jet, colorrange=(Rmin, Rmax), linewidth=3.5)
 xlims!(λs[1], λs[end])
+ylims!(0, nothing)
 fig2
 # xlims!(400, 800)
 # ylims!(0, 0.03)
@@ -178,6 +187,7 @@ fig2 = Figure();
 ax = CairoMakie.Axis(fig2[1, 1], xlabel="λ (nm)", ylabel="Reflectance");
 ls = lines!(ax, λs, Data_μ[1:462, idx_grass], color=data[1:462, idx_grass], colormap=:jet, colorrange=(Rmin, Rmax), linewidth=3.5)
 xlims!(λs[1], λs[end])
+ylims!(0, nothing)
 fig2
 
 save("./paper/figures/reflectance-grass.png", fig2)
@@ -185,8 +195,7 @@ save("./paper/figures/reflectance-grass.eps", fig2)
 save("./paper/figures/reflectance-grass.svg", fig2)
 save("./paper/figures/reflectance-grass.pdf", fig2)
 
-
-
+fig2
 
 
 

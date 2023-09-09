@@ -6,19 +6,24 @@ using MintsMakieRecipes
 
 set_theme!(mints_theme)
 
-my_theme = mints_theme
-my_theme.Axis.xticklabelsize=20
-my_theme.Axis.yticklabelsize=20
-my_theme.Axis.xlabelsize=22
-my_theme.Axis.ylabelsize=22
-my_theme.Axis.titlesize=25
-set_theme!(my_theme)
+update_theme!(
+    figure_padding=30,
+    Axis = (
+        xticklabelsize=20,
+        yticklabelsize=20,
+        xlabelsize=22,
+        ylabelsize=22,
+        titlesize=25,
+    ),
+    Colorbar = (
+    ticklabelsize=20,
+    labelsize=22
+        )
+)
 
 
 include("utils/vis_tools.jl")
 include("utils/config.jl")
-
-
 
 
 basepath
@@ -135,6 +140,28 @@ save("./paper/figures/radiance-sample.png", fig)
 save("./paper/figures/radiance-sample.svg", fig)
 save("./paper/figures/radiance-sample.eps", fig)
 save("./paper/figures/radiance-sample.pdf", fig)
+
+
+
+fig = Figure();
+ax = CairoMakie.Axis(
+    fig[1, 1],
+    xlabel="λ (nm)",
+    ylabel="Downwelling Irradiance",
+    yticksvisible=false,
+    ygridvisible=false,
+    yminorgridvisible=false,
+    yticklabelsvisible=false,
+)
+ls = lines!(λs_irrad, irrad_dat, color=:orange, linewidth=3)
+xlims!(λs_irrad[1], λs_irrad[end])
+ylims!(0, nothing)
+fig
+
+save("./paper/figures/irradiance-smaple.png", fig)
+save("./paper/figures/irradiance-smaple.svg", fig)
+save("./paper/figures/irradiance-smaple.eps", fig)
+save("./paper/figures/irradiance-smaple.pdf", fig)
 
 
 λ_blue = 495.0
