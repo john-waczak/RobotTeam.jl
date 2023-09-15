@@ -67,7 +67,7 @@
 
 %=================================================================
 % Full title of the paper (Capitalized)
-\Title{Rapid Georectification of Pushbroom Hyperspectral Imagery for Real Time Processing by an Autonomous Aerial Vehicle}
+\Title{Rapid Georeferencing n of Pushbroom Hyperspectral Imagery for Real Time Processing by an Autonomous Aerial Vehicle}
 
 % MDPI internal command: Title for citation in the left column
 \TitleCitation{Title}
@@ -106,7 +106,7 @@ $^{2}$ \quad Affiliation 2; e-mail@e-mail.com}
 %\conference{} % An extended version of a conference paper
 
 % Abstract (Do not insert blank lines, i.e. \\) 
-\abstract{Recent developments in hyperspectral imaging technology have led to dramatic reductions in both size and weight of imaging platforms. Due to these improvements, it is now possible to incorporate the technology as the payload of autonomous aerial vehicles such as drones. However, the massive volume of hyperperspectral datacubes poses significant computational challenges to their adoption in real-time applications. In this paper, we develop a procedure for the rapid georectification of pushbroom imagery and demonstrate its application for real-time remote sensing... Results indicate that a typical image can be processed in ~10 seconds while it takes $x$ seconds to capture. }
+\abstract{Recent developments in hyperspectral imaging technology have led to dramatic reductions in both size and weight of imaging platforms. Due to these improvements, it is now possible to incorporate the technology as the payload of highly mobile autonomous aerial vehicles such as drones. However, the massive volume of hyperperspectral datacubes poses significant computational challenges to their adoption in real-time applications. In this paper, we demonstrate a procedure for the rapid georeferencing of pushbroom imagery and demonstrate its application for real-time remote sensing... Results indicate that a typical image can be processed in ~10 seconds while it takes $x$ seconds to capture. }
 
 % Keywords
 \keyword{keyword 1; keyword 2; keyword 3 (List three to ten pertinent keywords specific to the article; yet reasonably common within the subject discipline.)} 
@@ -160,20 +160,17 @@ $^{2}$ \quad Affiliation 2; e-mail@e-mail.com}
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\setcounter{section}{-1} %% Remove this when starting to work on the template.
-\section{How to Use this Template}
-
-The template details the sections that can be used in a manuscript. Note that the order and names of article sections may differ from the requirements of the journal (e.g., the positioning of the Materials and Methods section). Please check the instructions on the authors' page of the journal to verify the correct order and names. For any questions, please contact the editorial office of the journal or support@mdpi.com. For LaTeX-related questions please contact latex@mdpi.com.%\endnote{This is an endnote.} % To use endnotes, please un-comment \printendnotes below (before References). Only journal Laws uses \footnote.
-
-% The order of the section titles is different for some journals. Please refer to the "Instructions for Authors” on the journal homepage.
 
 \section{Introduction}
 
-- Global change necessitating better sensing technology 
-- Need to be able to track changes to water/plant/forest/land quality for better environmental management and disaster mitigation
-    - Palestine Ohio
-    - fires in Canada and Maui
-    - Oil Spill clean up
+
+
+In this paper, we implement a procedure for rapid georeferencing of hyper-spectral imagery acquired by an autonomous aerial vehicle, and in doing so, demonstrate the feasibility of the platform for real time characterization of novel environments. 
+
+In the face of rapidly accelerating global change, there is a demonstrated need for advanced remote sensing technologies. For decades
+
+
+\subsection{Hyperspectral Imaging}
 
 - multi-spectral and hyper-spectral imaging
 - in remote sensing
@@ -184,9 +181,7 @@ The template details the sections that can be used in a manuscript. Note that th
 - Land change tracking (water erosion, deforestation, desertification )
 - Mention popular spectral indices like the NDVI
 
-- Paragraph about use of drones for remote sensing 
-    - smart agriculture
-    - photogrametry and DEMs (Open Drone Map) 
+\subsection{Georeferencing}
 
 - Paragraph about the need of georectification 
     - Georectification = georeference + orthorectification
@@ -194,6 +189,14 @@ The template details the sections that can be used in a manuscript. Note that th
         - ground control points 
         - IMU / GPS 
         - different type of sensors: square, pushbroom, whiskbroom
+
+\subsection{Drone based Platforms}
+
+- Paragraph about use of drones for remote sensing 
+    - smart agriculture
+    - photogrametry and DEMs (Open Drone Map) 
+
+\subsection{Computational Difficulties}
 
 - Paragraph about difficulties of real time HSI application 
     - data volume (storage, transfer/streaming)
@@ -203,10 +206,14 @@ The template details the sections that can be used in a manuscript. Note that th
         - Chemical concentrations (chlorophyll, crude oil, etc...) 
 
 - Paragraph about advances in hyper-spectral imaging technology, drones, and miniaturized computers (e.g. the raspberry pi, jetson nano, intel nuc, etc...) 
-        
+
+- Challenges of using HSI in real-time applications: Data volume, processing power, data streaming. Data are much to big to be streamed to the ground in real time; for this application, imagery need to be collected, georeferenced, and then turned into data products \emph{onboard the drone} before they can be readily streamed to the ground. We can always re-process the imagery later for an in-depth reanalysis, but for time-critical applications, we need all of the processing to happen on board the drone. 
+
 - finally, introduce the paper via the Robot team --> e.g. cite the paper and talk about how we're going to focus on the drone in detail in this paper. 
 
-Challenges of using HSI in real-time applications: Data volume, processing power, data streaming. Data are much to big to be streamed to the ground in real time; for this application, imagery need to be collected, georeferenced, and then turned into data products \emph{onboard the drone} before they can be readily streamed to the ground. We can always re-process the imagery later for an in-depth reanalysis, but for time-critical applications, we need all of the processing to happen on board the drone. 
+IMU - inertial measurement unit
+
+In the realm of remote sensing, the utilization of multi-spectral and hyper-spectral imaging technologies has ushered in a new era of unprecedented capabilities for Earth observation and environmental monitoring. Multi-spectral imaging, which captures data across a limited number of discrete spectral bands, and hyper-spectral imaging, which offers a significantly higher number of finely spaced spectral channels, have become invaluable tools for discerning intricate details of our planet's surface and atmosphere. These advanced imaging techniques enable researchers to detect and analyze subtle variations in the reflectance, absorption, and emission properties of materials across the electromagnetic spectrum. They have found applications in a myriad of fields, from agriculture and forestry to geology and environmental science, by enhancing our ability to discriminate between different land cover types, identify chemical compositions, and monitor changes in vegetation health and atmospheric constituents \cite{remote-sensing-foliage, crop-indices-2000}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
