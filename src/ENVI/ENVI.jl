@@ -362,7 +362,7 @@ end
 
 
 
-struct HyperspectralImage{T0, T1}
+struct HyperspectralImage{T0, T1<:AbstractArray}
     # UTMz information
     X::Array{T0, 3}  # x,y,z
     zone::UInt8
@@ -380,7 +380,7 @@ struct HyperspectralImage{T0, T1}
     λs::Vector{T0}
 
     # Datacube
-    Datacube::Array{T1,3}
+    Datacube::T1
 
     # Viewing Geometry
     Roll::Matrix{T0}
