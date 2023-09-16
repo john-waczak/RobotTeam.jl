@@ -14,7 +14,6 @@ export EnviHeaderParsingError
 export read_envi_header
 export get_envi_params
 export read_envi_file
-export envi_to_hdf5
 
 export FlightData, HyperspectralImage
 
@@ -281,161 +280,6 @@ end
 
 
 
-"""
-    envi_to_hdf5(fpath::String, hdrpath::String, lcfpath::outpath::String)
-
-Read ENVI formatted HSI file from `fpath` and its associated metadata file `hdrpath`. Save the array to an hdf5 file at `outapth`.
-"""
-function envi_to_hdf5(
-    bilpath::String,
-    bilhdr::String,
-    lcfpath::String,
-    timespath::String,
-    specpath::String,
-    spechdr::String,
-    outpath::String;
-    )
-
-    # assume year is 2019 and overwrite with year from hdr file
-    year = 2019
-
-    fid = h5open(outpath, "w")
-
-    println("\tcreating groups")
-    g = create_group(fid, "raw")
-
-    # create subgroups for each data set type
-    rad = create_group(g, "radiance")
-    down = create_group(g, "downwelling")
-    lcf = create_group(g, "lcf")
-    times = create_group(g, "times")
-
-    # use let block to keep img from persisting
-    let
-        println("\treading radiance")
-        img, h, p = read_envi_file(bilpath, bilhdr)
-
-        year = parse(Int, split(split(p["timestamp"], "-")[1], "/")[end])
-        println("\tyear taken: $(year)")
-
-        # write the envi radiance data
-        rad["radiance", chunk=(p["nbands"], 1, 1)] = img
-        # rad["wavelengths"] = parse.(Float64, h["wavelength"])
-        for (key, val) ∈ p
-            if key != "dtype"
-                rad[key] = val
-            end
-        end
-    end
-
-    let
-        println("\treading downwelling irradiance")
-        spec, hspec, pspec = read_envi_file(specpath, spechdr)
-        # write the downwelling irradiance
-        down["irradiance"] = spec
-        for (key, val) ∈ pspec
-            if key != "dtype"
-                down[key] = val
-            end
-        end
-    end
-
-
-    # save the pixel times from the times file
-    println("\tsaving times")
-    pixel_ts =  vec(readdlm(timespath, ',', Float64))
-    pixel_ts =  pixel_ts .- pixel_ts[1] # assume .lcf and .times start at the same time (t=0.0 s)
-    times["times"] = pixel_ts
-
-
-
-    println("\treading flight data")
-    lcf_data = readdlm(lcfpath, '\t', Float64)
-
-    lcf_ts = @view lcf_data[:,1]
-    lcf["start-time"] = Dates.format(gpsToUTC(lcf_ts[1], year), "yyyy-mm-ddTHH:MM:SS.sss")
-    lcf_times = lcf_ts .- lcf_ts[1]  # so that we start at t=0.0
-    lcf["times"] = pixel_ts
-
-    println("\tinterpolating LCF times to match pixel times")
-
-    println("\t\tlongitudes")
-    lon  = @view lcf_data[:,5]
-    lon_interp = CubicSpline(lon, lcf_times)
-    lcf["longitude"] = lon_interp.(pixel_ts)
-
-    println("\t\tlatitudes")
-    lat = @view lcf_data[:,6]
-    lat_interp = CubicSpline(lat, lcf_times)
-    lcf["latitude"] = lat_interp.(pixel_ts)
-
-
-    println("\t\taltitudes")
-    alt = @view lcf_data[:,7]
-    alt_interp = CubicSpline(alt, lcf_times)
-    lcf["altitude"] = alt_interp.(pixel_ts)
-
-
-    # generate x,y,z positions in
-    println("\t\tconstructing local UTM coordinates")
-    X_lla = LLA.(lat, lon, alt)
-    utmzs = [UTMZ(xlla, wgs84) for xlla ∈ X_lla]
-
-    let
-        println("\t\troll")
-        roll = -1.0 .*  @view lcf_data[:,2]  # <-- due to opposite convention used by GPS
-        roll_interp = CubicSpline(roll, lcf_times)
-        lcf["roll"] = roll_interp.(pixel_ts)
-    end
-
-    let
-        println("\t\tpitch")
-        pitch = @view lcf_data[:,3]
-        pitch_interp = CubicSpline(pitch, lcf_times)
-        lcf["pitch"] = pitch_interp.(pixel_ts)
-    end
-
-    let
-        println("\t\theading")
-        heading = @view lcf_data[:,4]
-        heading_interp = CubicSpline(heading, lcf_times)
-        lcf["heading"] = heading_interp.(pixel_ts)
-    end
-
-    let
-        println("\t\tutm x")
-        lcf_x = [utmz.x for utmz ∈ utmzs]
-        x_interp = CubicSpline(lcf_x, lcf_times)
-        lcf["x"] = x_interp.(pixel_ts)
-    end
-
-    let
-        println("\t\tutm y")
-        lcf_y = [utmz.y for utmz ∈ utmzs]
-        y_interp = CubicSpline(lcf_y, lcf_times)
-        lcf["y"] = y_interp.(pixel_ts)
-    end
-
-    let
-        println("\t\tutm z")
-        lcf_z = [utmz.z for utmz ∈ utmzs]
-        z_interp = CubicSpline(lcf_z, lcf_times)
-        lcf["z"] = z_interp.(pixel_ts)
-    end
-
-
-    lcf_isnorth = [utmz.isnorth for utmz ∈ utmzs]
-    lcf_zone = [utmz.zone for utmz ∈ utmzs]
-
-    lcf["isnorth"] = [lcf_isnorth[1] for _ ∈ 1:length(pixel_ts)]
-    lcf["zone"] = [lcf_zone[1] for _ ∈ 1:length(pixel_ts)]
-
-
-    return fid
-end
-
-
-
 
 
 struct FlightData
@@ -518,38 +362,38 @@ end
 
 
 
-struct HyperspectralImage
+struct HyperspectralImage{T0, T1}
     # UTMz information
-    X::Array{Float64, 3}  # x,y,z
+    X::Array{T0, 3}  # x,y,z
     zone::UInt8
     isnorth::Bool
 
     # Lat/Lon
-    Longitudes::Matrix{Float64}
-    Latitudes::Matrix{Float64}
+    Longitudes::Matrix{T0}
+    Latitudes::Matrix{T0}
 
     # Times Information
-    Times::Matrix{Float64}
+    Times::Matrix{T0}
     start_time::DateTime
 
     # Wavelength bins in nm
-    λs::Vector{Float64}
+    λs::Vector{T0}
 
-    # Reflectance
-    Reflectance::Array{Float64,3}
+    # Datacube
+    Datacube::Array{T1,3}
 
     # Viewing Geometry
-    Roll::Matrix{Float64}
-    Pitch::Matrix{Float64}
-    Heading::Matrix{Float64}
+    Roll::Matrix{T0}
+    Pitch::Matrix{T0}
+    Heading::Matrix{T0}
 
     # Camera Geometry
-    ViewAngle::Matrix{Float64}
+    ViewAngle::Matrix{T0}
 
     # Solar Geometry
-    SolarAzimuth::Matrix{Float64}
-    SolarElevation::Matrix{Float64}
-    SolarZenith::Matrix{Float64}
+    SolarAzimuth::Matrix{T0}
+    SolarElevation::Matrix{T0}
+    SolarZenith::Matrix{T0}
 end
 
 
