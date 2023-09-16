@@ -75,9 +75,9 @@ function getRGB(h5::HDF5.File; λred=630.0, λgreen=532.0, λblue=465.0, Δx=0.1
     idx_g = argmin(abs.(λs .- λgreen))
     idx_b = argmin(abs.(λs .- λblue))
 
-    Rr = h5["data-Δx_$(Δx)/Data_μ"][idx_r, :, :]
-    Rg = h5["data-Δx_$(Δx)/Data_μ"][idx_g, :, :]
-    Rb = h5["data-Δx_$(Δx)/Data_μ"][idx_b, :, :]
+    Rr = h5["data-Δx_$(Δx)/Data"][idx_r, :, :]
+    Rg = h5["data-Δx_$(Δx)/Data"][idx_g, :, :]
+    Rb = h5["data-Δx_$(Δx)/Data"][idx_b, :, :]
 
     ij_pixels = findall(h5["data-Δx_$(Δx)/IsInbounds"][:,:])
     img = zeros(4, size(Rr)...)
@@ -221,16 +221,16 @@ end
 
 
 
-function vis_rectified_cube(Data_μ, xs, ys, IsInbounds, λs, Δx; ibounds=(1, 1), jbounds=(1, 1), offset = 0.1, colormap=:jet, resolution=(800, 600), azimuth=3π / 4, elevation=3π / 16, colorbar=false)
+function vis_rectified_cube(Data, xs, ys, IsInbounds, λs, Δx; ibounds=(1, 1), jbounds=(1, 1), offset = 0.1, colormap=:jet, resolution=(800, 600), azimuth=3π / 4, elevation=3π / 16, colorbar=false)
 
     nλs = length(λs)
 
     println("\tGenerating RGB view...")
     ij_pixels = findall(IsInbounds)
-    Ref_img = getRGB(Data_μ, λs, ij_pixels)
+    Ref_img = getRGB(Data, λs, ij_pixels)
 
     println("\tReshaping data for plotting...")
-    data = PermutedDimsArray(Data_μ[1:nλs, :, :], (2, 3, 1))
+    data = PermutedDimsArray(Data[1:nλs, :, :], (2, 3, 1))
 
     println("\tApplying log10...")
     data = log10.(data .+ offset)

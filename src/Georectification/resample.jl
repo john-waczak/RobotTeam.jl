@@ -90,6 +90,110 @@ function get_resampled_grid(hsi::HyperspectralImage; Δx=0.1)
 end
 
 
+
+
+function resample_datacube_fast(hsi::HyperspectralImage; Δx=0.10)
+    # 1. resample to a square grid
+    println("\tgenerating new grid")
+    xs_new, ys_new, Xhsi_is, Xhsi_js, IsInbounds, ij_pixels, ij_notpixels, idx_dict = get_resampled_grid(hsi;Δx=Δx)
+
+    # 2. allocate latitudes and longitudes
+    Longitudes_out= Matrix{Float64}(undef, size(IsInbounds)...)
+    Latitudes_out = Matrix{Float64}(undef, size(IsInbounds)...)
+
+
+    lla_from_utm = LLAfromUTM(hsi.zone, hsi.isnorth, wgs84)
+
+    Threads.@threads for j ∈ axes(Longitudes_out,2)
+        for i ∈ axes(Longitudes_out,1)
+            lla = lla_from_utm(UTM(xs_new[i], ys_new[j], 0.0))
+
+            Longitudes_out[i, j] = lla.lon
+            Latitudes_out[i, j] = lla.lat
+        end
+    end
+
+
+    # 3. create vector of labels
+
+    varnames = [
+        ["R_"*lpad(idx, 3,"0") for idx ∈ 1:length(hsi.λs)]...,
+        "roll",
+        "pitch",
+        "heading",
+        "view_angle",
+        "solar_azimuth",
+        "solar_elevation",
+        "solar_zenith",
+    ]
+
+    printnames = [
+        ["Reflectance Band "*lpad(idx, 3,"0") for idx ∈ 1:length(hsi.λs)]...,
+        "Roll",
+        "Pitch",
+        "Heading",
+        "Viewing Angle",
+        "Solar Azimuth",
+        "Solar Elevation",
+        "Solar Zenith",
+    ]
+
+    # 4. Allocate Data Matrices
+    Data= Array{Float64}(undef, length(varnames), size(IsInbounds)...);
+
+    # set all out-of-bounds pixels to NaN
+    Data[:,ij_notpixels] .= NaN;
+
+    # 5. set up band indices
+    ks_reflectance = 1:length(hsi.λs)
+    k_roll = findfirst(varnames .== "roll")
+    k_pitch = findfirst(varnames .== "pitch")
+    k_heading = findfirst(varnames .== "heading")
+    k_view = findfirst(varnames .== "view_angle")
+    k_az = findfirst(varnames .== "solar_azimuth")
+    k_el = findfirst(varnames .== "solar_elevation")
+    k_zen = findfirst(varnames .== "solar_zenith")
+
+
+    # 6. Resample the data
+    println("\tinterpolating...")
+    Threads.@threads for k ∈ 1:length(ij_pixels)
+        @inbounds ij = ij_pixels[k]
+
+        # copy reflectance
+        @inbounds Data[ks_reflectance, ij] = mean(hsi.Datacube[:, idx_dict[ij]], dims=2)[:, 1]
+
+        # copy Roll
+        @inbounds Data[k_roll, ij] = mean(hsi.Roll[idx_dict[ij]])
+
+        # copy Pitch
+        @inbounds Data[k_pitch, ij] = mean(hsi.Pitch[idx_dict[ij]])
+
+        # copy Heading
+        @inbounds Data[k_heading, ij] = mean(hsi.Heading[idx_dict[ij]])
+
+        # copy Viewing Angle
+        @inbounds Data[k_view, ij] = mean(hsi.ViewAngle[idx_dict[ij]])
+
+        # copy Solar Azimuth
+        @inbounds Data[k_az, ij] = mean(hsi.SolarAzimuth[idx_dict[ij]])
+
+        # copy Solar Elevation
+        @inbounds Data[k_el, ij] = mean(hsi.SolarElevation[idx_dict[ij]])
+
+        # copy Solar Zenith
+        @inbounds Data[k_zen, ij] = mean(hsi.SolarZenith[idx_dict[ij]])
+    end
+
+
+    return xs_new, ys_new, hsi.isnorth, hsi.zone, Longitudes_out, Latitudes_out, IsInbounds, varnames, printnames, hsi.λs, Data
+
+end
+
+
+
+
+
 function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
     # 1. resample to a square grid
     println("\tgenerating new grid")
@@ -100,15 +204,19 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
     Latitudes_out = Matrix{Float64}(undef, size(IsInbounds)...)
 
 
+    lla_from_utm = LLAfromUTM(hsi.zone, hsi.isnorth, wgs84)
+
     Threads.@threads for j ∈ axes(Longitudes_out,2)
         for i ∈ axes(Longitudes_out,1)
-            lla = LLAfromUTMZ(wgs84)(UTMZ(xs_new[i], ys_new[j], 0, hsi.zone, hsi.isnorth))
-            Longitudes_out[i,j] = lla.lon
-            Latitudes_out[i,j] = lla.lat
+            lla = lla_from_utm(UTM(xs_new[i], ys_new[j], 0.0))
+
+            Longitudes_out[i, j] = lla.lon
+            Latitudes_out[i, j] = lla.lat
         end
     end
 
 
+    # 3. create vector of labels
     # 3. create vector of labels
 
     varnames = [
@@ -176,12 +284,10 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
     ]
 
     # 4. Allocate Data Matrices
-    Data_μ = Array{Float64}(undef, length(varnames), size(IsInbounds)...);
-    Data_σ = Array{Float64}(undef, length(varnames), size(IsInbounds)...);
-    # set all out-of-bounds pixels to NaN
-    Data_μ[:,ij_notpixels] .= NaN;
-    Data_σ[:,ij_notpixels] .= NaN;
+    Data= Array{Float64}(undef, length(varnames), size(IsInbounds)...);
 
+    # set all out-of-bounds pixels to NaN
+    Data[:,ij_notpixels] .= NaN;
 
     # 5. set up band indices
     ks_reflectance = 1:length(hsi.λs)
@@ -197,508 +303,320 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
     # 6. Resample the data
     println("\tinterpolating...")
     Threads.@threads for k ∈ 1:length(ij_pixels)
-        ij = ij_pixels[k]
+        @inbounds ij = ij_pixels[k]
 
         # copy reflectance
-        Data_μ[ks_reflectance,ij] = mean(hsi.Reflectance[:,idx_dict[ij]], dims=2)[:,1]
-        Data_σ[ks_reflectance,ij] = std(hsi.Reflectance[:,idx_dict[ij]], dims=2)[:,1]
+        @inbounds Data[ks_reflectance, ij] = mean(hsi.Datacube[:, idx_dict[ij]], dims=2)[:, 1]
 
         # copy Roll
-        Data_μ[k_roll,ij] = mean(hsi.Roll[idx_dict[ij]])
-        Data_σ[k_roll,ij] = std(hsi.Roll[idx_dict[ij]])
+        @inbounds Data[k_roll, ij] = mean(hsi.Roll[idx_dict[ij]])
 
         # copy Pitch
-        Data_μ[k_pitch,ij] = mean(hsi.Pitch[idx_dict[ij]])
-        Data_σ[k_pitch,ij] = std(hsi.Pitch[idx_dict[ij]])
+        @inbounds Data[k_pitch, ij] = mean(hsi.Pitch[idx_dict[ij]])
 
         # copy Heading
-        Data_μ[k_heading,ij] = mean(hsi.Heading[idx_dict[ij]])
-        Data_σ[k_heading,ij] = std(hsi.Heading[idx_dict[ij]])
+        @inbounds Data[k_heading, ij] = mean(hsi.Heading[idx_dict[ij]])
 
         # copy Viewing Angle
-        Data_μ[k_view,ij] = mean(hsi.ViewAngle[idx_dict[ij]])
-        Data_σ[k_view,ij] = std(hsi.ViewAngle[idx_dict[ij]])
+        @inbounds Data[k_view, ij] = mean(hsi.ViewAngle[idx_dict[ij]])
 
         # copy Solar Azimuth
-        Data_μ[k_az,ij] = mean(hsi.SolarAzimuth[idx_dict[ij]])
-        Data_σ[k_az,ij] = std(hsi.SolarAzimuth[idx_dict[ij]])
+        @inbounds Data[k_az, ij] = mean(hsi.SolarAzimuth[idx_dict[ij]])
 
         # copy Solar Elevation
-        Data_μ[k_el,ij] = mean(hsi.SolarElevation[idx_dict[ij]])
-        Data_σ[k_el,ij] = std(hsi.SolarElevation[idx_dict[ij]])
+        @inbounds Data[k_el, ij] = mean(hsi.SolarElevation[idx_dict[ij]])
 
         # copy Solar Zenith
-        Data_μ[k_zen,ij] = mean(hsi.SolarZenith[idx_dict[ij]])
-        Data_σ[k_zen,ij] = std(hsi.SolarZenith[idx_dict[ij]])
+        @inbounds Data[k_zen, ij] = mean(hsi.SolarZenith[idx_dict[ij]])
     end
 
 
-    # add in derived metrics
-    λs = hsi.λs
+    return xs_new, ys_new, hsi.isnorth, hsi.zone, Longitudes_out, Latitudes_out, IsInbounds, varnames, printnames, hsi.λs, Data
 
+end
+
+
+
+
+function generate_derived_metrics!(Data, IsInbounds, varnames, λs)
     ij_pixels = findall(IsInbounds)
-
-    println("\tgenerating derived λ metrics...")
-    Threads.@threads for ij ∈ ij_pixels
-        k_λ = k_zen+1
-
-        # mNDWI
-        kgreen = findfirst(λs .> 550)
-        kswir = findfirst(λs .> 770)
-
-        green = Data_μ[kgreen,ij] ± Data_σ[kgreen,ij]
-        swir = Data_μ[kswir,ij] ± Data_μ[kswir,ij]
-
-        numer = green - swir
-        denom = green + swir
-
-        mNDWI = numer / denom
-        Data_μ[k_λ,ij] =  Measurements.value(mNDWI)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(mNDWI)
-
-        # NDVI "normalized difference vegetative index ∈ [-1, 1]"
-        k_λ += 1
-        kir = findfirst(λs .> 800)
-        kred = findfirst(λs .> 680)
-
-        ir_band = Data_μ[kir,ij] ± Data_σ[kir,ij]
-        red_band = Data_μ[kred,ij] ± Data_σ[kred,ij]
-
-        numer = (ir_band - red_band)
-        denom = (ir_band + red_band)
-
-        NDVI = numer / denom
-        Data_μ[k_λ,ij] = Measurements.value(NDVI)
-        Data_σ[k_λ,ij] = Measurements.uncertainty(NDVI)
-
-        # SR "simple ratio ∈ [0, 30]"
-        k_λ += 1
-        ir_band = Data_μ[kir,ij] ± Data_σ[kir,ij]
-        red_band = Data_μ[kred,ij] ± Data_σ[kred,ij]
-
-        numer = ir_band
-        denom = red_band
-
-        SR = numer / denom
-        Data_μ[k_λ,ij]  = Measurements.value(SR)
-        Data_σ[k_λ,ij]  = Measurements.uncertainty(SR)
-
-        # EVI "enhanced vegetative index ∈ [-1, 1]"
-        k_λ += 1
-        kblue = findfirst(λs .> 450)
-
-        ir_band = Data_μ[kir,ij] ± Data_σ[kir,ij]
-        red_band = Data_μ[kred,ij] ± Data_σ[kred,ij]
-        blue_band = Data_μ[kblue,ij] ± Data_σ[kblue,ij]
-
-        numer = 2.5 * (ir_band - red_band)
-        denom = ir_band + 6 * red_band - 7.5 * blue_band
-
-        EVI = numer / denom
-
-        Data_μ[k_λ,ij] = Measurements.value(EVI)
-        Data_σ[k_λ,ij] = Measurements.uncertainty(EVI)
-
-        # AVRI "Atmospherical Resistant Vegitative Indes"
-        k_λ += 1
-
-        ir_band = Data_μ[kir,ij] ± Data_σ[kir,ij]
-        red_band = Data_μ[kred,ij] ± Data_σ[kred,ij]
-        blue_band = Data_μ[kblue,ij] ± Data_σ[kblue,ij]
-
-        numer = (ir_band - 2 * red_band + blue_band)
-        denom = (ir_band + 2 * red_band - blue_band)
-
-        AVRI =  (numer / denom)
-
-        Data_μ[k_λ,ij] =  Measurements.value(AVRI)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(AVRI)
-
-        # # NDVI_705 "Red Edge Normalized Difference Vegetation Index"
-        k_λ += 1
-        kir = findfirst(λs .> 750)
-        kred = findfirst(λs .> 705)
-
-        ir_band = Data_μ[kir,ij] ± Data_σ[kir,ij]
-        red_band = Data_μ[kred,ij] ± Data_σ[kred,ij]
-
-        numer = (ir_band - red_band)
-        denom = (ir_band + red_band)
-
-        NDVI_705 = (numer / denom)
-
-        Data_μ[k_λ,ij] =  Measurements.value(NDVI_705)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(NDVI_705)
-
-
-        # # MSR_705 "Modified Red Edge Simple Ratio Index"
-        k_λ += 1
-        kblue = findfirst(λs .> 445)
-
-        ir_band = Data_μ[kir,ij] ± Data_σ[kir,ij]
-        red_band = Data_μ[kred,ij] ± Data_σ[kred,ij]
-        blue_band = Data_μ[kblue,ij] ± Data_σ[kblue,ij]
-
-        numer = (ir_band - blue_band)
-        denom = (red_band - blue_band)
-
-        MSR_705 = (numer / denom)
-
-        Data_μ[k_λ,ij] =  Measurements.value(MSR_705)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(MSR_705)
-
-
-        # # MNDVI "modified red edge normalized vegetation index"
-        k_λ += 1
-
-        ir_band = Data_μ[kir,ij] ± Data_σ[kir,ij]
-        red_band = Data_μ[kred,ij] ± Data_σ[kred,ij]
-        blue_band = Data_μ[kblue,ij] ± Data_σ[kblue,ij]
-
-        numer = (ir_band - red_band)
-        denom = (ir_band + red_band - 2 * blue_band)
-
-        MNDVI =  (numer / denom)
-
-        Data_μ[k_λ,ij] =  Measurements.value(MNDVI)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(MNDVI)
-
-
-        # # VOG1 "vogelmann red edge index"
-        k_λ += 1
-        kir = findfirst(λs .> 740)
-        kred = findfirst(λs .> 720)
-
-        ir_band = Data_μ[kir,ij] ± Data_σ[kir,ij]
-        red_band = Data_μ[kred,ij] ± Data_σ[kred,ij]
-
-        numer = (ir_band)
-        denom = (red_band)
-
-        VOG1 = (numer / denom)
-
-        Data_μ[k_λ,ij] =  Measurements.value(VOG1)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(VOG1)
-
-
-        # # VOG2 "vogelmann red edge index 2"
-        k_λ += 1
-        k1 = findfirst(λs .> 734)
-        k2 = findfirst(λs .> 747)
-        k3 = findfirst(λs .> 715)
-        k4 = findfirst(λs .> 726)
-
-        band1 = Data_μ[k1,ij] ± Data_σ[k1,ij]
-        band2 = Data_μ[k2,ij] ± Data_σ[k2,ij]
-        band3 = Data_μ[k3,ij] ± Data_σ[k3,ij]
-        band4 = Data_μ[k4,ij] ± Data_σ[k4,ij]
-
-        numer = (band1 - band2)
-        denom = (band3 + band4)
-
-        VOG2 =  (numer / denom)
-
-        Data_μ[k_λ,ij] =  Measurements.value(VOG2)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(VOG2)
-
-
-        # # VOG3 "vogelmann red edge index 3 ∈ [0, 20]"
-        k_λ += 1
-        k1 = findfirst(λs .> 734)
-        k2 = findfirst(λs .> 747)
-        k3 = findfirst(λs .> 715)
-        k4 = findfirst(λs .> 720)
-
-        band1 = Data_μ[k1,ij] ± Data_σ[k1,ij]
-        band2 = Data_μ[k2,ij] ± Data_σ[k2,ij]
-        band3 = Data_μ[k3,ij] ± Data_σ[k3,ij]
-        band4 = Data_μ[k4,ij] ± Data_σ[k4,ij]
-
-        numer = (band1 - band2)
-        denom = (band3 + band4)
-
-        VOG3 =  (numer / denom)
-
-        Data_μ[k_λ,ij] =  Measurements.value(VOG3)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(VOG3)
-
-
-        # # PRI "photochemical reflectance index" ∈[-1, 1]
-        k_λ
-        k1 = findfirst(λs .> 531)
-        k2 = findfirst(λs .> 570)
-
-        band1 = Data_μ[k1,ij] ± Data_σ[k1,ij]
-        band2 = Data_μ[k2,ij] ± Data_σ[k2,ij]
-
-        numer = (band1 - band2)
-        denom = (band1 + band2)
-
-        PRI = (numer / denom)
-
-        Data_μ[k_λ,ij] =  Measurements.value(PRI)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(PRI)
-
-
-
-        # # SIPI "structure intensive pigment index" ∈[0, 2]
-        k_λ += 1
-        k1 = findfirst(λs .> 800)
-        k2 = findfirst(λs .> 445)
-        k3 = findfirst(λs .> 680)
-
-        band1 = Data_μ[k1,ij] ± Data_σ[k1,ij]
-        band2 = Data_μ[k2,ij] ± Data_σ[k2,ij]
-        band3 = Data_μ[k3,ij] ± Data_σ[k3,ij]
-
-        numer = (band1 - band2)
-        denom = (band1 + band3)
-
-        SIPI = (numer / denom)
-
-        Data_μ[k_λ,ij] =  Measurements.value(SIPI)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(SIPI)
-
-
-        # # PSRI "Plant Senescence Reflectance Index"
-        k_λ += 1
-        k1 = findfirst(λs .> 680)
-        k2 = findfirst(λs .> 500)
-        k3 = findfirst(λs .> 750)
-
-        band1 = Data_μ[k1,ij] ± Data_σ[k1,ij]
-        band2 = Data_μ[k2,ij] ± Data_σ[k2,ij]
-        band3 = Data_μ[k3,ij] ± Data_σ[k3,ij]
-
-        numer = (band1 - band2)
-        denom = band3
-
-        PSRI = (numer / denom)
-
-        Data_μ[k_λ,ij] =  Measurements.value(PSRI)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(PSRI)
-
-
-        # # CRI1 "carotenoid reflectance index"
-        k_λ += 1
-        k1 = findfirst(λs .> 510)
-        k2 = findfirst(λs .> 550)
-
-        band1 = Data_μ[k1,ij] ± Data_σ[k1,ij]
-        band2 = Data_μ[k2,ij] ± Data_σ[k2,ij]
-
-        CRI1 = ((1 / band1) - (1 / band2))
-
-        Data_μ[k_λ,ij] =  Measurements.value(CRI1)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(CRI1)
-
-        # CRI2 "carotenoid reflectance index 2"
-        k_λ += 1
-        k1 = findfirst(λs .> 510)
-        k2 = findfirst(λs .> 700)
-
-        band1 = Data_μ[k1,ij] ± Data_σ[k1,ij]
-        band2 = Data_μ[k2,ij] ± Data_σ[k2,ij]
-
-        CRI2 = ((1 / band1) - (1 / band2))
-
-        Data_μ[k_λ,ij] =  Measurements.value(CRI2)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(CRI2)
-
-        # # ARI1 "anthocyanin reflectance index"
-        k_λ += 1
-        k1 = findfirst(λs .> 550)
-        k2 = findfirst(λs .> 700)
-
-        band1 = Data_μ[k1,ij] ± Data_σ[k1,ij]
-        band2 = Data_μ[k2,ij] ± Data_σ[k2,ij]
-
-        ARI1 = ((1 / band1) - (1 / band2))
-
-        Data_μ[k_λ,ij] =  Measurements.value(ARI1)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(ARI1)
-
-
-        # # ARI2 "anthocyanin reflectance index 2"
-        k_λ += 1
-        k1 = findfirst(λs .> 550)
-        k2 = findfirst(λs .> 700)
-        k3 = findfirst(λs .> 800)
-
-        band1 = Data_μ[k1,ij] ± Data_σ[k1,ij]
-        band2 = Data_μ[k2,ij] ± Data_σ[k2,ij]
-        band3 = Data_μ[k3,ij] ± Data_σ[k3,ij]
-
-        ARI2 = (band3*((1 / band1) - (1 / band2)))
-
-        Data_μ[k_λ,ij] =  Measurements.value(ARI2)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(ARI2)
-
-
-        # # WBI "water band index"
-        k_λ += 1
-        k1 = findfirst(λs .> 900)
-        k2 = findfirst(λs .> 970)
-
-        band1 = Data_μ[k1,ij] ± Data_σ[k1,ij]
-        band2 = Data_μ[k2,ij] ± Data_σ[k2,ij]
-
-        numer = band1
-        denom = band2
-
-        WBI = (numer / denom)
-
-        Data_μ[k_λ,ij] =  Measurements.value(WBI)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(WBI)
-
-
-        # # MCRI "Modified Chlorophyll Absorption Reflectance Index"
-        k_λ += 1
-        k1 = findfirst(λs .> 550)
-        k2 = findfirst(λs .> 670)
-        k3 = findfirst(λs .> 701)
-        k4 = findfirst(λs .> 780)
-
-        band1 = Data_μ[k1,ij] ± Data_σ[k1,ij]
-        band2 = Data_μ[k2,ij] ± Data_σ[k2,ij]
-        band3 = Data_μ[k3,ij] ± Data_σ[k3,ij]
-        band4 = Data_μ[k4,ij] ± Data_σ[k4,ij]
-
-        MCRI = (((band3 -band2) - 0.2 * (band3 - band1)) * (band3 / band2))
-
-        Data_μ[k_λ,ij] =  Measurements.value(MCRI)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(MCRI)
-
-
-
-        # # TCARI "transformed chlorophyll absorption reflectance index"
-        k_λ += 1
-
-        band1 = Data_μ[k1,ij] ± Data_σ[k1,ij]
-        band2 = Data_μ[k2,ij] ± Data_σ[k2,ij]
-        band3 = Data_μ[k3,ij] ± Data_σ[k3,ij]
-
-        TCARI = (3 * ((band3 - band2) - 0.2 * (band3 - band1) * (band3 /band2)))
-
-        Data_μ[k_λ,ij] =  Measurements.value(TCARI)
-        Data_σ[k_λ,ij] =  Measurements.uncertainty(TCARI)
-
-    end
-
-
-
-
-
-
-    return xs_new, ys_new, hsi.isnorth, hsi.zone, Longitudes_out, Latitudes_out, IsInbounds, varnames, printnames, λs, Data_μ, Data_σ
-
-end
-
-
-
-
-
-function resample_datacube_fast(hsi::HyperspectralImage; Δx=0.10)
-    # 1. resample to a square grid
-    println("\tgenerating new grid")
-    xs_new, ys_new, Xhsi_is, Xhsi_js, IsInbounds, ij_pixels, ij_notpixels, idx_dict = get_resampled_grid(hsi;Δx=Δx)
-
-    # 2. allocate latitudes and longitudes
-    Longitudes_out= Matrix{Float64}(undef, size(IsInbounds)...)
-    Latitudes_out = Matrix{Float64}(undef, size(IsInbounds)...)
-
-
-    Threads.@threads for j ∈ axes(Longitudes_out,2)
-        for i ∈ axes(Longitudes_out,1)
-            lla = LLAfromUTMZ(wgs84)(UTMZ(xs_new[i], ys_new[j], 0, hsi.zone, hsi.isnorth))
-            Longitudes_out[i,j] = lla.lon
-            Latitudes_out[i,j] = lla.lat
-        end
-    end
-
-
-    # 3. create vector of labels
-
-    varnames = [
-        ["R_"*lpad(idx, 3,"0") for idx ∈ 1:length(hsi.λs)]...,
-        "roll",
-        "pitch",
-        "heading",
-        "view_angle",
-        "solar_azimuth",
-        "solar_elevation",
-        "solar_zenith",
-    ]
-
-    printnames = [
-        ["Reflectance Band "*lpad(idx, 3,"0") for idx ∈ 1:length(hsi.λs)]...,
-        "Roll",
-        "Pitch",
-        "Heading",
-        "Viewing Angle",
-        "Solar Azimuth",
-        "Solar Elevation",
-        "Solar Zenith",
-    ]
-
-    # 4. Allocate Data Matrices
-    Data_μ = Array{Float64}(undef, length(varnames), size(IsInbounds)...);
-
-    # set all out-of-bounds pixels to NaN
-    Data_μ[:,ij_notpixels] .= NaN;
-
-
-    # 5. set up band indices
-    ks_reflectance = 1:length(hsi.λs)
-    k_roll = findfirst(varnames .== "roll")
-    k_pitch = findfirst(varnames .== "pitch")
-    k_heading = findfirst(varnames .== "heading")
-    k_view = findfirst(varnames .== "view_angle")
-    k_az = findfirst(varnames .== "solar_azimuth")
-    k_el = findfirst(varnames .== "solar_elevation")
     k_zen = findfirst(varnames .== "solar_zenith")
 
+    k_λ = k_zen+1
 
-    # 6. Resample the data
-    println("\tinterpolating...")
-    Threads.@threads for k ∈ 1:length(ij_pixels)
-        ij = ij_pixels[k]
+    # mNDWI
+    kgreen = findfirst(λs .> 550)
+    kswir = findfirst(λs .> 770)
 
-        # copy reflectance
-        Data_μ[ks_reflectance,ij] = mean(hsi.Reflectance[:,idx_dict[ij]], dims=2)[:,1]
+    green = @view Data[kgreen,:,:]
+    swir = @view Data[kswir,:,:]
 
-        # copy Roll
-        Data_μ[k_roll,ij] = mean(hsi.Roll[idx_dict[ij]])
+    numer = green .- swir
+    denom = green .+ swir
 
-        # copy Pitch
-        Data_μ[k_pitch,ij] = mean(hsi.Pitch[idx_dict[ij]])
+    Data[k_λ,:,:] = numer ./ denom
 
-        # copy Heading
-        Data_μ[k_heading,ij] = mean(hsi.Heading[idx_dict[ij]])
+    # NDVI "normalized difference vegetative index ∈ [-1, 1]"
+    k_λ += 1
+    kir = findfirst(λs .> 800)
+    kred = findfirst(λs .> 680)
 
-        # copy Viewing Angle
-        Data_μ[k_view,ij] = mean(hsi.ViewAngle[idx_dict[ij]])
+    ir_band = @view Data[kir, :,:]
+    red_band = @view Data[kred, :,:]
 
-        # copy Solar Azimuth
-        Data_μ[k_az,ij] = mean(hsi.SolarAzimuth[idx_dict[ij]])
+    numer = (ir_band .- red_band)
+    denom = (ir_band .+ red_band)
 
-        # copy Solar Elevation
-        Data_μ[k_el,ij] = mean(hsi.SolarElevation[idx_dict[ij]])
+    Data[k_λ,:,:] = numer ./ denom
 
-        # copy Solar Zenith
-        Data_μ[k_zen,ij] = mean(hsi.SolarZenith[idx_dict[ij]])
-    end
+    # SR "simple ratio ∈ [0, 30]"
+    k_λ += 1
+    ir_band = @view Data[kir, :,:]
+    red_band = @view Data[kred, :,:]
+
+    numer = ir_band
+    denom = red_band
+
+    Data[k_λ,:,:] = numer ./ denom
+
+    # EVI "enhanced vegetative index ∈ [-1, 1]"
+    k_λ += 1
+    kblue = findfirst(λs .> 450)
+
+    ir_band = @view Data[kir, :,:]
+    red_band = @view Data[kred, :,:]
+    blue_band = @view Data[kblue, :,:]
+
+    numer = 2.5 * (ir_band .- red_band)
+    denom = ir_band .+ 6 .* red_band .- 7.5 .* blue_band
+
+    Data[k_λ,:,:] = numer ./ denom
+
+    # AVRI "Atmospherical Resistant Vegitative Indes"
+    k_λ += 1
+
+    ir_band = @view Data[kir, :,:]
+    red_band = @view Data[kred, :,:]
+    blue_band = @view Data[kblue, :,:]
+
+    numer = (ir_band .- 2 .* red_band .+ blue_band)
+    denom = (ir_band .+ 2 .* red_band .- blue_band)
+
+    Data[k_λ,:,:] = (numer ./ denom)
 
 
-    # add in derived metrics
-    λs = hsi.λs
+    # # NDVI_705 "Red Edge Normalized Difference Vegetation Index"
+    k_λ += 1
+    kir = findfirst(λs .> 750)
+    kred = findfirst(λs .> 705)
 
-    return xs_new, ys_new, hsi.isnorth, hsi.zone, Longitudes_out, Latitudes_out, IsInbounds, varnames, printnames, λs, Data_μ
+    ir_band = @view Data[kir, :,:]
+    red_band = @view Data[kred, :,:]
+
+    numer = (ir_band .- red_band)
+    denom = (ir_band .+ red_band)
+
+    Data[k_λ,:,:] = (numer ./ denom)
+
+
+    # # MSR_705 "Modified Red Edge Simple Ratio Index"
+    k_λ += 1
+    kblue = findfirst(λs .> 445)
+
+    ir_band = @view Data[kir, :,:]
+    red_band = @view Data[kred, :,:]
+    blue_band = @view Data[kblue, :,:]
+
+    numer = (ir_band .- blue_band)
+    denom = (red_band .- blue_band)
+
+    Data[k_λ,:,:] = (numer ./ denom)
+
+
+    # # MNDVI "modified red edge normalized vegetation index"
+    k_λ += 1
+
+    ir_band = @view Data[kir, :,:]
+    red_band = @view Data[kred, :,:]
+    blue_band = @view Data[kblue, :,:]
+
+    numer = (ir_band .- red_band)
+    denom = (ir_band .+ red_band .- 2 .* blue_band)
+
+    Data[k_λ,:,:] =  (numer ./ denom)
+
+
+    # # VOG1 "vogelmann red edge index"
+    k_λ += 1
+    kir = findfirst(λs .> 740)
+    kred = findfirst(λs .> 720)
+
+    ir_band = @view Data[kir, :,:]
+    red_band = @view Data[kred, :,:]
+
+    numer = ir_band
+    denom = red_band
+
+    Data[k_λ,:,:] = (numer ./ denom)
+
+
+    # # VOG2 "vogelmann red edge index 2"
+    k_λ += 1
+    k1 = findfirst(λs .> 734)
+    k2 = findfirst(λs .> 747)
+    k3 = findfirst(λs .> 715)
+    k4 = findfirst(λs .> 726)
+
+    band1 = @view Data[k1, :,:]
+    band2 = @view Data[k2, :,:]
+    band3 = @view Data[k3, :,:]
+    band4 = @view Data[k4, :,:]
+
+    numer = (band1 .- band2)
+    denom = (band3 .+ band4)
+
+    Data[k_λ,:,:] =  (numer ./ denom)
+
+
+    # # VOG3 "vogelmann red edge index 3 ∈ [0, 20]"
+    k_λ += 1
+    k1 = findfirst(λs .> 734)
+    k2 = findfirst(λs .> 747)
+    k3 = findfirst(λs .> 715)
+    k4 = findfirst(λs .> 720)
+
+    band1 = @view Data[k1, :,:]
+    band2 = @view Data[k2, :,:]
+    band3 = @view Data[k3, :,:]
+    band4 = @view Data[k4, :,:]
+
+    Data[k_λ,:,:] =  (numer ./ denom)
+
+    # # PRI "photochemical reflectance index" ∈[-1, 1]
+    k_λ
+    k1 = findfirst(λs .> 531)
+    k2 = findfirst(λs .> 570)
+
+    band1 = @view Data[k1, :,:]
+    band2 = @view Data[k2, :,:]
+
+    numer = (band1 .- band2)
+    denom = (band1 .+ band2)
+
+    Data[k_λ, :,:] = (numer ./ denom)
+
+    # # SIPI "structure intensive pigment index" ∈[0, 2]
+    k_λ += 1
+    k1 = findfirst(λs .> 800)
+    k2 = findfirst(λs .> 445)
+    k3 = findfirst(λs .> 680)
+
+    band1 = @view Data[k1, :,:]
+    band2 = @view Data[k2, :,:]
+    band3 = @view Data[k3, :,:]
+
+    numer = (band1 .- band2)
+    denom = (band1 .+ band3)
+
+    Data[k_λ,:,:] = (numer ./ denom)
+
+    # # PSRI "Plant Senescence Reflectance Index"
+    k_λ += 1
+    k1 = findfirst(λs .> 680)
+    k2 = findfirst(λs .> 500)
+    k3 = findfirst(λs .> 750)
+
+    band1 = @view Data[k1, :,:]
+    band2 = @view Data[k2, :,:]
+    band3 = @view Data[k3, :,:]
+
+    numer = (band1 .- band2)
+    denom = band3
+
+    Data[k_λ,:,:] = (numer ./ denom)
+
+    # # CRI1 "carotenoid reflectance index"
+    k_λ += 1
+    k1 = findfirst(λs .> 510)
+    k2 = findfirst(λs .> 550)
+
+    band1 = @view Data[k1, :,:]
+    band2 = @view Data[k2, :,:]
+
+    Data[k_λ,:,:] = ((1 ./ band1) .- (1 ./ band2))
+
+    # CRI2 "carotenoid reflectance index 2"
+    k_λ += 1
+    k1 = findfirst(λs .> 510)
+    k2 = findfirst(λs .> 700)
+
+    band1 = @view Data[k1, :,:]
+    band2 = @view Data[k2, :,:]
+
+    Data[k_λ, :,:] = ((1 ./ band1) .- (1 ./ band2))
+
+    # # ARI1 "anthocyanin reflectance index"
+    k_λ += 1
+    k1 = findfirst(λs .> 550)
+    k2 = findfirst(λs .> 700)
+
+    band1 = @view Data[k1, :,:]
+    band2 = @view Data[k2, :,:]
+
+    Data[k_λ,:,:]  = ((1 ./ band1) .- (1 ./ band2))
+
+    # # ARI2 "anthocyanin reflectance index 2"
+    k_λ += 1
+    k1 = findfirst(λs .> 550)
+    k2 = findfirst(λs .> 700)
+    k3 = findfirst(λs .> 800)
+
+    band1 = @view Data[k1, :,:]
+    band2 = @view Data[k2, :,:]
+    band3 = @view Data[k3, :,:]
+
+    Data[k_λ,:,:] = (band3 .* ((1 ./ band1) .- (1 ./ band2)))
+
+    # # WBI "water band index"
+    k_λ += 1
+    k1 = findfirst(λs .> 900)
+    k2 = findfirst(λs .> 970)
+
+    band1 = @view Data[k1, :,:]
+    band2 = @view Data[k2, :,:]
+
+    numer = band1
+    denom = band2
+
+    Data[k_λ, :,:] = (numer ./ denom)
+
+    # # MCRI "Modified Chlorophyll Absorption Reflectance Index"
+    k_λ += 1
+    k1 = findfirst(λs .> 550)
+    k2 = findfirst(λs .> 670)
+    k3 = findfirst(λs .> 701)
+    k4 = findfirst(λs .> 780)
+
+    band1 = @view Data[k1, :,:]
+    band2 = @view Data[k2, :,:]
+    band3 = @view Data[k3, :,:]
+    band4 = @view Data[k4, :,:]
+
+    Data[k_λ,:,:] = (((band3 .- band2) .- 0.2 .* (band3 .- band1)) .* (band3 ./ band2))
+
+
+    # # TCARI "transformed chlorophyll absorption reflectance index"
+    k_λ += 1
+
+    band1 = @view Data[k1, :,:]
+    band2 = @view Data[k2, :,:]
+    band3 = @view Data[k3, :,:]
+
+    Data[k_λ,:,:] = (3 .* ((band3 .- band2) .- 0.2 .* (band3 .- band1) .* (band3 ./ band2)))
+
+
 
 end
-
-
-
 
 
 
@@ -714,8 +632,7 @@ function save_resampled_hsi(
     varnames,
     printnames,
     λs,
-    Data_μ,
-    Data_σ,
+    Data,
     outpath;
     Δx=0.10,
     is_spec_chunked=false,
@@ -751,73 +668,13 @@ function save_resampled_hsi(
 
         # save mean data
         if is_spec_chunked
-            d["Data_μ", chunk=(length(varnames),1,1)] = Data_μ
-            d["Data_σ", chunk=(length(varnames),1,1)] = Data_σ
+            d["Data", chunk=(length(varnames),1,1)] = Data
         elseif is_band_chunked
-            d["Data_μ", chunk=(1,size(Longitudes)...)] = Data_μ
-            d["Data_σ", chunk=(1,size(Longitudes)...)] = Data_σ
+            d["Data", chunk=(1,size(Longitudes)...)] = Data
         else
-            d["Data_μ"] = Data_μ
-            d["Data_σ"] = Data_σ
+            d["Data"] = Data
         end
 
 
-    end
-end
-
-
-function save_resampled_hsi_fast(
-    xs,
-    ys,
-    isnorth,
-    zone,
-    Longitudes,
-    Latitudes,
-    IsInbounds,
-    varnames,
-    printnames,
-    λs,
-    Data_μ,
-    outpath;
-    Δx=0.10,
-    is_spec_chunked=false,
-    is_band_chunked=false
-    )
-
-    h5open(outpath, "w") do f
-        d = create_group(f, "data-Δx_$(Δx)")
-
-        # save resolution
-        d["Δx"] = Δx
-
-        # write the UTM coords
-        d["X"] = xs
-        d["Y"] = ys
-        d["isnorth"] = isnorth
-        d["zone"] = zone
-
-        # write Lat/Lon grid
-        d["Longitudes"] = Longitudes
-        d["Latitudes"] = Latitudes
-
-        # write pixel-mask
-        d["IsInbounds"] = IsInbounds
-
-        # write variable names
-        d["varnames"] = varnames
-        d["printnames"] = printnames
-
-        # save wavelength values
-        d["λs"] = λs
-
-
-        # save mean data
-        if is_spec_chunked
-            d["Data_μ", chunk=(length(varnames),1,1)] = Data_μ
-        elseif is_band_chunked
-            d["Data_μ", chunk=(1,size(Longitudes)...)] = Data_μ
-        else
-            d["Data_μ"] = Data_μ
-        end
     end
 end

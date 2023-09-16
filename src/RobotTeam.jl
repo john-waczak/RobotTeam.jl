@@ -21,6 +21,7 @@ export generateCoords!
 export build_mesh
 export bump_to_nearest_Δx, get_new_bounds, get_resampled_grid, resample_datacube, save_resampled_hsi
 export resample_datacube_fast, save_resampled_hsi_fast
+export generate_derived_metrics!
 export get_bil_files, get_raw_file_list
 
 

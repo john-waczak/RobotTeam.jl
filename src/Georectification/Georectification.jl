@@ -26,7 +26,6 @@ const offset_hdr = @path normpath(joinpath(@__DIR__, "../../assets", "calibratio
 
 include("reflectance.jl")
 export generateReflectance!
-export generateDerivedMetrics!
 
 include("georectify.jl")
 export generateCoords!
@@ -39,7 +38,7 @@ export build_mesh
 include("resample.jl")
 export bump_to_nearest_Δx, get_new_bounds, get_resampled_grid, resample_datacube, save_resampled_hsi
 export resample_datacube_fast, save_resampled_hsi_fast
-
+export generate_derived_metrics!
 
 
 include("folder_utils.jl")
@@ -50,9 +49,7 @@ function HyperspectralImage(
     bilpath::String,
     bilhdr::String,
     lcfpath::String,
-    timespath::String,
-    specpath::String,
-    spechdr::String;
+    timespath::String;
     θ_view=30.8,
     z_ground=292.0,
     isflipped=false
@@ -78,7 +75,6 @@ function HyperspectralImage(
     start_time = fdata.start_time
     λs = p["wavelengths"]
 
-    Reflectance = Array{Float64}(undef, nbands, nsamples, nscanlines)
 
     Roll = Matrix{Float64}(undef, nsamples, nscanlines);
     Pitch = Matrix{Float64}(undef, nsamples, nscanlines);
@@ -91,11 +87,17 @@ function HyperspectralImage(
     SolarZenith = Matrix{Float64}(undef, nsamples, nscanlines);
 
 
-    # 3. Compute Reflectance Data
-    let
-        Radiance, h, p = read_envi_file(bilpath, bilhdr)
-        generateReflectance!(Reflectance, Radiance, specpath, spechdr, λs)
-    end
+    # read in datacube data
+    Datacube, h, p = read_envi_file(bilpath, bilhdr)
+
+    # # 3. Compute Reflectance Data
+    # Datacube = Array{Float64}(undef, nbands, nsamples, nscanlines)
+    # let
+    #     Radiance, h, p = read_envi_file(bilpath, bilhdr)
+    #     generateReflectance!(Datacube, Radiance, specpath, spechdr, λs)
+    # end
+
+
 
     # 3. Generate Coordinates
     generateCoords!(X,Longitudes, Latitudes, Roll,Pitch,Heading,Times,ViewingAngle,SolarAzimuth,SolarElevation,SolarZenith,start_time,fdata;θ_view=θ_view,z_ground=z_ground,isflipped=isflipped)
@@ -110,7 +112,7 @@ function HyperspectralImage(
         Times,
         start_time,
         λs,
-        Reflectance,
+        Datacube,
         Roll,
         Pitch,
         Heading,
