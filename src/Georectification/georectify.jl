@@ -79,7 +79,6 @@ function generateCoords!(
         rs_pixel_sensor = [imagecoords(i,j,N,focal_length) for i∈1:3, j∈1:N]
     end
 
-
     # loop through and set viewing angle
     @tturbo for i ∈ 1:N, j∈1:lines
         ViewAngle[i,j] = atan(rs_pixel_sensor[2,i], rs_pixel_sensor[3,i])
@@ -97,11 +96,17 @@ function generateCoords!(
     isnorth = fdata.isnorth
     zone = fdata.zone
 
+    # define the coord transformation
+    lla_from_utm = LLAfromUTM(zone, isnorth, wgs84)
+
     # set up drone coordinates
     droneCoords = Array{Float64}(undef, 3, lines)
     @inbounds droneCoords[1,:] .= fdata.xs
     @inbounds droneCoords[2,:] .= fdata.ys
     @inbounds droneCoords[3,:] .= fdata.zs
+
+    s = 0.0
+    rs_object_utm = zeros(size(rs_pixel_sensor))
 
     Threads.@threads for line ∈ 1:lines
         # compute scale factor
@@ -123,32 +128,26 @@ function generateCoords!(
 
         # update pixel times
         Times[:,line] .= ts[line]
+    end
 
-        # convert back to latitude, longitude
-        for j ∈ 1:N
-            lla = LLAfromUTMZ(wgs84)(UTMZ(rs_object_utm[:,j]..., zone, isnorth))
-            @inbounds Latitudes[j,line] = lla.lat
-            @inbounds Longitudes[j,line] = lla.lon
+    X_utm = [UTM(X[1,i,j], X[2,i,j], X[3,i,j]) for i ∈ 1:N, j ∈ 1:lines]
+    X_lla = map(lla_from_utm, X_utm)
 
-            az,el = solar_azimuth_altitude(
-                Times[j,line],
+    Threads.@threads for i ∈ 1:N
+        for j ∈ 1:lines
+            @inbounds Latitudes[i,j] = (X_lla[i,j]).lat
+            @inbounds Longitudes[i,j] = (X_lla[i,j]).lon
+
+            SolarAzimuth[i,j],SolarElevation[i,j] = solar_azimuth_altitude(
+                Times[i,j],
                 start_time,
-                lla.lat,
-                lla.lon,
-                lla.alt
+                X_lla[i,j].lat,
+                X_lla[i, j].lon,
+                X_lla[i, j].alt,
             )
-            zen = 90 - el
 
-            SolarAzimuth[j,line] = az
-            SolarElevation[j,line] = el
-            SolarZenith[j,line] = zen
-
+            SolarZenith[i,j] = 90.0 - SolarElevation[i,j]
         end
-
-        # rs_object_lla = [LLAfromUTMZ(wgs84)(UTMZ(rs_object_utm[:,j]..., zone, isnorth)) for j∈1:N]
-        # @inbounds Latitudes[:,line] .= [lla.lat for lla ∈ rs_object_lla]
-        # @inbounds Longitudes[:,line] .= [lla.lon for lla ∈ rs_object_lla]
-
     end
 end
 
