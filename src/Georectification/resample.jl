@@ -38,16 +38,7 @@ function get_resampled_grid(hsi::HyperspectralImage; Δx=0.1)
 
     bump_to_nearest_Δx(xmin, Δx)
 
-    println("ymin: ", ymin)
-
     xmin, xmax, ymin, ymax = get_new_bounds(xmin, xmax, ymin, ymax; Δx=Δx)
-
-    println("ymin bumped: ", ymin)
-
-    # # estimate the bound for minimum pixel spacing in meters
-    # npix = max(size(hsi.X)...)
-    # Δx_min = min((ymax-ymin)/npix, (xmax-xmin)/npix)
-
 
     # generate a new x-y grid at the desired resolution
     xs_new = round.(range(xmin, stop=xmax, step=Δx), digits=2)
@@ -57,9 +48,6 @@ function get_resampled_grid(hsi::HyperspectralImage; Δx=0.1)
     # Xout = permutedims(cat([x for x ∈ xs_new, y ∈ ys_new], [y for x ∈ xs_new, y ∈ ys_new], dims=3), (3,1,2))  # 1.7 ms
 
     Xhsi = bump_to_nearest_Δx.(hsi.X[1:2,:,:],Δx)
-
-    println("minimum x: ", minimum(Xhsi[1,:,:])-xmin)
-    println("minimum y: ", minimum(Xhsi[2,:,:])-ymin)
 
     # generate hsi pixel indices in outbound grid
     Xhsi_is = Matrix{Int}(undef, size(Xhsi, 2), size(Xhsi,3));
