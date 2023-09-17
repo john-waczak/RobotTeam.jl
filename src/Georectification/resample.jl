@@ -18,7 +18,7 @@ Given bounding box and a resolution `Δx`, expand bounding box to nearest Δx.
 """
 function get_new_bounds(xmin, xmax, ymin, ymax; Δx=0.1)
     Δx_cm = 100*Δx
-    @assert 100%Δx_cm == 0
+    # @assert 100%Δx_cm == 0
 
     # pad to nearest Δx
     xmin -= Δx
@@ -38,13 +38,15 @@ function get_resampled_grid(hsi::HyperspectralImage; Δx=0.1)
 
     bump_to_nearest_Δx(xmin, Δx)
 
+    println("ymin: ", ymin)
 
-    xmin, xmax, ymin, ymax = get_new_bounds(xmin, xmax, ymin, ymax)
+    xmin, xmax, ymin, ymax = get_new_bounds(xmin, xmax, ymin, ymax; Δx=Δx)
 
+    println("ymin bumped: ", ymin)
 
-    # estimate the bound for minimum pixel spacing in meters
-    npix = max(size(hsi.X)...)
-    Δx_min = min((ymax-ymin)/npix, (xmax-xmin)/npix)
+    # # estimate the bound for minimum pixel spacing in meters
+    # npix = max(size(hsi.X)...)
+    # Δx_min = min((ymax-ymin)/npix, (xmax-xmin)/npix)
 
 
     # generate a new x-y grid at the desired resolution
@@ -56,10 +58,13 @@ function get_resampled_grid(hsi::HyperspectralImage; Δx=0.1)
 
     Xhsi = bump_to_nearest_Δx.(hsi.X[1:2,:,:],Δx)
 
+    println("minimum x: ", minimum(Xhsi[1,:,:])-xmin)
+    println("minimum y: ", minimum(Xhsi[2,:,:])-ymin)
 
     # generate hsi pixel indices in outbound grid
     Xhsi_is = Matrix{Int}(undef, size(Xhsi, 2), size(Xhsi,3));
     Xhsi_js = Matrix{Int}(undef, size(Xhsi, 2), size(Xhsi,3));
+
     @tturbo for j ∈ axes(Xhsi, 3), i ∈ axes(Xhsi,2)
         Xhsi_is[i,j] = Int(round((Xhsi[1,i,j] - xmin)/Δx + 1))
         Xhsi_js[i,j] = Int(round((Xhsi[2,i,j] - ymin)/Δx + 1))
@@ -67,6 +72,7 @@ function get_resampled_grid(hsi::HyperspectralImage; Δx=0.1)
 
     # generate boundary mask
     IsInbounds = [false for i ∈ 1:length(xs_new), j ∈ 1:length(ys_new)];
+
     @tturbo for j ∈ axes(Xhsi,3), i ∈ axes(Xhsi,2)
         IsInbounds[Xhsi_is[i,j], Xhsi_js[i,j]] = true
     end
