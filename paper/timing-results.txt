@@ -1,58 +1,97 @@
+
+--------------------------
+
+Resampling timings for a cube of length 1000:
+
+--------------------------
+
 ---
-Reflectance conversion for Dye_1-6
+Resampling results for Δx=5
 ---
-TrialEstimate(4.227 s)
-n-scanlines: 725
+9.783255614
+---
+Resampling results for Δx=10
+---
+5.003596091
+---
+Resampling results for Δx=15
+---
+3.966914991
+---
+Resampling results for Δx=20
+---
+3.64640148
+---
+Resampling results for Δx=25
+---
+3.417680942
+---
+Resampling results for Δx=30
+---
+3.326574188
+---
+Resampling results for Δx=35
+---
+3.238967642
+---
+Resampling results for Δx=40
+---
+3.118112272
+---
+Resampling results for Δx=45
+---
+3.119093755
+---
+Resampling results for Δx=50
+---
+3.0990592785
+
+--------------------------
+
+Georeferencing and Loading:
+
+--------------------------
+
+---
+Loading and Georeferencing time for 371 scanlines
+---
+0.5493310697
 
 
 ---
-Reflectance conversion for NoDye_1
+Loading and Georeferencing time for 462 scanlines
 ---
-TrialEstimate(2.060 s)
-n-scanlines: 371
+0.713548655125
 
 
 ---
-Reflectance conversion for Scotty_1-1
+Loading and Georeferencing time for 1000 scanlines
 ---
-TrialEstimate(5.901 s)
-n-scanlines: 1000
+1.51619276775
 
 
-The following timings used a cube of length 1000
----
-Resampling results for Δx=0.5
----
-TrialEstimate(1.434 s)
 
+--------------------------
 
----
-Resampling results for Δx=0.4
----
-TrialEstimate(1.545 s)
+Reflectance conversion:
 
+--------------------------
 
 ---
-Resampling results for Δx=0.3
+Reflectance conversion time for 371 scanlines
 ---
-TrialEstimate(1.673 s)
+0.167518106
 
 
 ---
-Resampling results for Δx=0.2
+Reflectance conversion time for 462 scanlines
 ---
-TrialEstimate(1.802 s)
+0.07628073425757576
 
 
 ---
-Resampling results for Δx=0.1
+Reflectance conversion time for 1000 scanlines
 ---
-TrialEstimate(4.026 s)
-
-
----
-Resampling results for Δx=0.05
----
-TrialEstimate(10.537 s)
+0.25098820868
 
 

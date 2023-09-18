@@ -6,145 +6,120 @@ using MintsMakieRecipes
 
 set_theme!(mints_theme)
 
+update_theme!(
+    figure_padding=30,
+    Axis=(
+        xticklabelsize=20,
+        yticklabelsize=20,
+        xlabelsize=22,
+        ylabelsize=22,
+        titlesize=25,
+    ),
+    Colorbar=(
+        ticklabelsize=20,
+        labelsize=22
+    )
+)
+
+
 include("utils/vis_tools.jl")
 include("utils/config.jl")
 
 
 basepath = "/home/teamlary/gitrepos/utd/RobotTeam.jl/data/raw"
-f1 = get_raw_file_list(get_bil_files(basepath, "Dye_1")[1])
-f2 = get_raw_file_list(get_bil_files(basepath, "NoDye_1")[1])
-f3 = get_raw_file_list(get_bil_files(basepath, "Scotty_1")[1])
+f1 = get_raw_file_list(get_bil_files(basepath, "NoDye_1")[1])
+f2 = get_raw_file_list(get_bil_files(basepath, "NoDye_1")[2])
+f3 = get_raw_file_list(get_bil_files(basepath, "NoDye_1")[3])
 
 f = f3
 
-
-hsi = HyperspectralImage(f.bilpath, f.bilhdr, f.lcfpath, f.timespath, f.specpath, f.spechdr; isflipped=true);
-
-
-suite = BenchmarkGroup()
-
-suite["reflectance-conversion"] = BenchmarkGroup()
-suite["resampling"] = BenchmarkGroup()
-
-suite["reflectance-conversion"]["Dye_1"] = @benchmarkable HyperspectralImage($f1.bilpath, $f1.bilhdr, $f1.lcfpath, $f1.timespath, $f1.specpath, $f1.spechdr; isflipped=true)
-suite["reflectance-conversion"]["NoDye_1"] = @benchmarkable HyperspectralImage($f2.bilpath, $f2.bilhdr, $f2.lcfpath, $f2.timespath, $f2.specpath, $f2.spechdr; isflipped=true)
-suite["reflectance-conversion"]["Scotty_1"] = @benchmarkable HyperspectralImage($f3.bilpath, $f3.bilhdr, $f3.lcfpath, $f3.timespath, $f3.specpath, $f3.spechdr; isflipped=true)
-
-
-suite["resampling"]["Δx=0.05"] = @benchmarkable resample_datacube_fast($hsi; Δx=0.05)
-suite["resampling"]["Δx=0.1"] = @benchmarkable resample_datacube_fast($hsi; Δx=0.1)
-suite["resampling"]["Δx=0.2"] = @benchmarkable resample_datacube_fast($hsi; Δx=0.2)
-suite["resampling"]["Δx=0.3"] = @benchmarkable resample_datacube_fast($hsi; Δx=0.3)
-suite["resampling"]["Δx=0.4"] = @benchmarkable resample_datacube_fast($hsi; Δx=0.4)
-suite["resampling"]["Δx=0.5"] =  @benchmarkable resample_datacube_fast($hsi; Δx=0.5)
-
-
-tune!(suite);
-results = run(suite, verbose=true, seconds=100)
-
-
-println("Writing to file...")
-open("./paper/timing-results.txt", "w") do file
-
-    println(file, "---")
-    println(file, "Reflectance conversion for Dye_1-6")
-    println(file, "---")
-    println(file, mean(results["reflectance-conversion"]["Dye_1"]))
-    println(file, "n-scanlines: ", read_envi_header(f1.bilhdr)["lines"])
-    println(file, "\n")
-
-    println(file, "---")
-    println(file, "Reflectance conversion for NoDye_1")
-    println(file, "---")
-    println(file, mean(results["reflectance-conversion"]["NoDye_1"]))
-    println(file, "n-scanlines: ", read_envi_header(f2.bilhdr)["lines"])
-    println(file, "\n")
-
-    println(file, "---")
-    println(file, "Reflectance conversion for Scotty_1-1")
-    println(file, "---")
-    println(file, mean(results["reflectance-conversion"]["Scotty_1"]))
-    println(file, "n-scanlines: ", read_envi_header(f3.bilhdr)["lines"])
-    println(file, "\n")
-
-
-    println(file, "The following timings used a cube of length ", read_envi_header(f3.bilhdr)["lines"])
-
-    println(file, "---")
-    println(file, "Resampling results for Δx=0.5")
-    println(file, "---")
-    println(file, mean(results["resampling"]["Δx=0.5"]))
-    println(file, "\n")
-
-    println(file, "---")
-    println(file, "Resampling results for Δx=0.4")
-    println(file, "---")
-    println(file, mean(results["resampling"]["Δx=0.4"]))
-    println(file, "\n")
-
-    println(file, "---")
-    println(file, "Resampling results for Δx=0.3")
-    println(file, "---")
-    println(file, mean(results["resampling"]["Δx=0.3"]))
-    println(file, "\n")
-
-    println(file, "---")
-    println(file, "Resampling results for Δx=0.2")
-    println(file, "---")
-    println(file, mean(results["resampling"]["Δx=0.2"]))
-    println(file, "\n")
-
-    println(file, "---")
-    println(file, "Resampling results for Δx=0.1")
-    println(file, "---")
-    println(file, mean(results["resampling"]["Δx=0.1"]))
-    println(file, "\n")
-
-    println(file, "---")
-    println(file, "Resampling results for Δx=0.05")
-    println(file, "---")
-    println(file, mean(results["resampling"]["Δx=0.05"]))
-    println(file, "\n")
-
-end
-
-
-# create plot of resampling times
-sizes = [5, 10, 20, 30, 40, 50]
-timings = [
-    mean(results["resampling"]["Δx=0.05"]).time / 1e9,
-    mean(results["resampling"]["Δx=0.1"]).time / 1e9,
-    mean(results["resampling"]["Δx=0.2"]).time / 1e9,
-    mean(results["resampling"]["Δx=0.3"]).time / 1e9,
-    mean(results["resampling"]["Δx=0.4"]).time / 1e9,
-    mean(results["resampling"]["Δx=0.5"]).time / 1e9,
-]
-
+sizes = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 scanlines = [
-    parse(Int, read_envi_header(f2.bilhdr)["lines"]),
     parse(Int, read_envi_header(f1.bilhdr)["lines"]),
+    parse(Int, read_envi_header(f2.bilhdr)["lines"]),
     parse(Int, read_envi_header(f3.bilhdr)["lines"]),
 ]
 
-stimings = [
-    mean(results["reflectance-conversion"]["NoDye_1"]).time / 1e9,
-    mean(results["reflectance-conversion"]["Dye_1"]).time / 1e9,
-    mean(results["reflectance-conversion"]["Scotty_1"]).time / 1e9,
-]
+
+georeferencing_timings = []
+resampling_timings = []
+reflectance_timings = []
+
+# benchmark the loading and georeferencing timings
+let
+    t = @benchmark HyperspectralImage($f1.bilpath, $f1.bilhdr, $f1.lcfpath, $f1.timespath; isflipped=true)
+    push!(georeferencing_timings, mean(t.times)/1e9)
+end
+
+let
+    t = @benchmark HyperspectralImage($f2.bilpath, $f2.bilhdr, $f2.lcfpath, $f2.timespath; isflipped=true)
+    push!(georeferencing_timings, mean(t.times)/1e9)
+end
+
+let
+    t = @benchmark HyperspectralImage($f3.bilpath, $f3.bilhdr, $f3.lcfpath, $f3.timespath; isflipped=true)
+    push!(georeferencing_timings, mean(t.times)/1e9)
+end
 
 
-my_theme = mints_theme
-my_theme.Axis.xticklabelsize=20
-my_theme.Axis.yticklabelsize=20
-my_theme.Axis.xlabelsize=22
-my_theme.Axis.ylabelsize=22
-my_theme.Axis.titlesize=25
-set_theme!(my_theme)
+
+# benchmark resampling times
+let
+    hsi = HyperspectralImage(f.bilpath, f.bilhdr, f.lcfpath, f.timespath; isflipped=true);
+
+    for i in 1:length(sizes)
+        size = sizes[i]/100
+        t = @benchmark resample_datacube_fast($hsi; Δx=$size)
+        push!(resampling_timings, mean(t.times)/1e9)
+    end
+end
+
+
+
+# benchmark reflectance timings
+let
+    hsi1 = HyperspectralImage(f1.bilpath, f1.bilhdr, f1.lcfpath, f1.timespath; isflipped=true);
+    _, _, _, _, _, _, _, varnames, printnames, λs, Data1 = resample_datacube_fast(hsi1);
+
+    size(Data1)
+    # (469, 595, 396)
+    # 936 ms
+    t = @benchmark generateReflectance!($Data1, $f1.specpath, $f1.spechdr, $λs)
+    push!(reflectance_timings, mean(t.times)/1e9)
+end
+
+let
+    hsi2 = HyperspectralImage(f2.bilpath, f2.bilhdr, f2.lcfpath, f2.timespath; isflipped=true);
+    _, _, _, _, _, _, _, varnames, printnames, λs, Data2 = resample_datacube_fast(hsi2)
+
+    size(Data2)
+    # 114 ms
+    # (469, 620, 389)
+    t = @benchmark generateReflectance!($Data2, $f2.specpath, $f2.spechdr, $λs)
+    push!(reflectance_timings, mean(t.times)/1e9)
+end
+
+let
+    hsi3 = HyperspectralImage(f3.bilpath, f3.bilhdr, f3.lcfpath, f3.timespath; isflipped=true);
+    _, _, _, _, _, _, _, varnames, printnames, λs, Data3 = resample_datacube_fast(hsi3)
+
+    size(Data3)
+    # (469, 487, 947)
+    # 161 ms
+    t = @benchmark generateReflectance!($Data3, $f3.specpath, $f3.spechdr, $λs)
+    push!(reflectance_timings, mean(t.times)/1e9)
+end
+
+
+resampling_timings = Float64.(resampling_timings)
+georeferencing_timings = Float64.(georeferencing_timings)
+reflectance_timings = Float64.(reflectance_timings)
 
 fig = Figure();
-ax = CairoMakie.Axis(fig[1,1], xlabel="grid resolution (cm)", ylabel="execution time (seconds)", title="Hyperspectral Image Reinterpolation")
-line  = lines!(ax, sizes, timings, linewidth=4)
-scatter  = scatter!(ax, sizes, timings; markersize=15)
+ax = CairoMakie.Axis(fig[1,1], xlabel="Grid Resolution (cm)", ylabel="Execution Time (seconds)", title="Hyperspectral Image Resampling")
+line  = lines!(ax, sizes, resampling_timings, linewidth=4)
+scatter  = scatter!(ax, sizes, resampling_timings; markersize=15)
+xlims!(5, 50)
 fig
 
 save("paper/figures/regrid-timing.png", fig)
@@ -153,16 +128,68 @@ save("paper/figures/regrid-timing.eps", fig)
 save("paper/figures/regrid-timing.svg", fig)
 
 
+size_in_inches = (5, 3)
+dpi = 300
+size_in_pixels = size_in_inches .* dpi
 
-fig = Figure();
-ax = CairoMakie.Axis(fig[1,1], xlabel="number of scanlines", ylabel="execution time (seconds)", title="Loading & Reflectance Conversion")
-line  = lines!(ax, scanlines, stimings, linewidth=4)
-scatter  = scatter!(ax, scanlines, stimings; markersize=15)
+fig = Figure(resolution=size_in_pixels);
+ax1 = CairoMakie.Axis(fig[1,1], xlabel="number of scanlines", ylabel="Execution Time (seconds)", title="Loading and Georeferencing")
+ax2 = CairoMakie.Axis(fig[1,2], xlabel="number of scanlines", ylabel="Execution Time (seconds)", title="Radiance to Reflectance Conversion", yaxisposition=:right)
+
+line1  = lines!(ax1, scanlines, georeferencing_timings; linewidth=4)
+scatter1  = scatter!(ax1, scanlines, georeferencing_timings; markersize=15)
+
+line2  = lines!(ax2, scanlines, reflectance_timings; linewidth=4, color=mints_colors[2])
+scatter2 = scatter!(ax2, scanlines, reflectance_timings; markersize=15, color=mints_colors[2])
+
 fig
+
 
 save("paper/figures/reflectance-timing.png", fig)
 save("paper/figures/reflectance-timing.pdf", fig)
 save("paper/figures/reflectance-timing.eps", fig)
 save("paper/figures/reflectance-timing.svg", fig)
+
+
+println("Writing to file...")
+open("./paper/timing-results.txt", "w") do file
+
+
+    println(file, "\n--------------------------\n")
+    println(file, "Resampling timings for a cube of length ", read_envi_header(f3.bilhdr)["lines"], ":")
+    println(file, "\n--------------------------\n")
+
+    for i ∈ 1:length(sizes)
+        println(file, "---")
+        println(file, "Resampling results for Δx=$(sizes[i])")
+        println(file, "---")
+        println(file, resampling_timings[i])
+
+    end
+
+    println(file, "\n--------------------------\n")
+    println(file, "Georeferencing and Loading:")
+    println(file, "\n--------------------------\n")
+
+    for i ∈ 1:length(scanlines)
+        println(file, "---")
+        println(file, "Loading and Georeferencing time for $(scanlines[i]) scanlines")
+        println(file, "---")
+        println(file, georeferencing_timings[i])
+        println(file, "\n")
+    end
+
+    println(file, "\n--------------------------\n")
+    println(file, "Reflectance conversion:")
+    println(file, "\n--------------------------\n")
+
+    for i ∈ 1:length(scanlines)
+        println(file, "---")
+        println(file, "Reflectance conversion time for $(scanlines[i]) scanlines")
+        println(file, "---")
+        println(file, reflectance_timings[i])
+        println(file, "\n")
+    end
+end
 
 

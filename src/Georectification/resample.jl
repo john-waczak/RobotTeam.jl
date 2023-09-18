@@ -1,6 +1,8 @@
 using Statistics
 using HDF5
 using Measurements
+
+
 """
     bump_to_nearest_Δx(val, Δx)
 
@@ -17,7 +19,7 @@ end
 Given bounding box and a resolution `Δx`, expand bounding box to nearest Δx.
 """
 function get_new_bounds(xmin, xmax, ymin, ymax; Δx=0.1)
-    Δx_cm = 100*Δx
+    # Δx_cm = 100*Δx
     # @assert 100%Δx_cm == 0
 
     # pad to nearest Δx
@@ -148,14 +150,16 @@ function resample_datacube_fast(hsi::HyperspectralImage; Δx=0.10)
     k_el = findfirst(varnames .== "solar_elevation")
     k_zen = findfirst(varnames .== "solar_zenith")
 
-
+    # convert Datacube to float first
+    Datacube = Float64.(hsi.Datacube)
     # 6. Resample the data
     println("\tinterpolating...")
     Threads.@threads for k ∈ 1:length(ij_pixels)
         @inbounds ij = ij_pixels[k]
 
         # copy reflectance
-        @inbounds Data[ks_reflectance, ij] = mean(hsi.Datacube[:, idx_dict[ij]], dims=2)[:, 1]
+        # @inbounds Data[ks_reflectance, ij] = mean(hsi.Datacube[:, idx_dict[ij]], dims=2)
+        @inbounds Data[ks_reflectance, ij] = mean(Datacube[:, idx_dict[ij]], dims=2)
 
         # copy Roll
         @inbounds Data[k_roll, ij] = mean(hsi.Roll[idx_dict[ij]])

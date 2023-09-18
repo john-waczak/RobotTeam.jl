@@ -87,17 +87,8 @@ function HyperspectralImage(
     SolarZenith = Matrix{Float64}(undef, nsamples, nscanlines);
 
 
-    # read in datacube data
+    # read in datacube data and convert to Float64 representation
     Datacube, h, p = read_envi_file(bilpath, bilhdr)
-
-    # # 3. Compute Reflectance Data
-    # Datacube = Array{Float64}(undef, nbands, nsamples, nscanlines)
-    # let
-    #     Radiance, h, p = read_envi_file(bilpath, bilhdr)
-    #     generateReflectance!(Datacube, Radiance, specpath, spechdr, λs)
-    # end
-
-
 
     # 3. Generate Coordinates
     generateCoords!(X,Longitudes, Latitudes, Roll,Pitch,Heading,Times,ViewingAngle,SolarAzimuth,SolarElevation,SolarZenith,start_time,fdata;θ_view=θ_view,z_ground=z_ground,isflipped=isflipped)

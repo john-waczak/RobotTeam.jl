@@ -25,14 +25,18 @@ for (day, runs) ∈ CollectionsDict
                     f.bilhdr,
                     f.lcfpath,
                     f.timespath,
-                    f.specpath,
-                    f.spechdr;
                     isflipped=true
                 )
 
                 println("\tresampling to new grid")
-                xs, ys, isnorth, zone, Longitudes, Latitudes, IsInbounds, varnames, printnames, λs, Data_μ, Data_σ = resample_datacube(hsi; Δx=Δx)
 
+                xs, ys, isnorth, zone, Longitudes, Latitudes, IsInbounds, varnames, printnames, λs, Data = resample_datacube(hsi)
+
+                println("\tconverting to reflectance")
+                generateReflectance!(Data, f.specpath, f.spechdr, λs)
+
+                println("\tgenerating derived metrics")
+                generate_derived_metrics!(Data, IsInbounds, varnames, λs)
 
                 fname = split(f.lcfpath, "/")[end-1] * ".h5"
 
@@ -48,8 +52,7 @@ for (day, runs) ∈ CollectionsDict
                     varnames,
                     printnames,
                     λs,
-                    Data_μ,
-                    Data_σ,
+                    Data,
                     joinpath(outpath, day, run, fname);
                     Δx=Δx,
                     is_spec_chunked=is_spec_chunked,
