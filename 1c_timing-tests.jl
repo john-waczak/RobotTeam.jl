@@ -33,6 +33,7 @@ f3 = get_raw_file_list(get_bil_files(basepath, "NoDye_1")[3])
 
 f = f3
 
+
 sizes = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 scanlines = [
     parse(Int, read_envi_header(f1.bilhdr)["lines"]),
@@ -132,6 +133,9 @@ size_in_inches = (5, 3)
 dpi = 300
 size_in_pixels = size_in_inches .* dpi
 
+scanlines
+reflectance_timings
+
 fig = Figure(resolution=size_in_pixels);
 ax1 = CairoMakie.Axis(fig[1,1], xlabel="number of scanlines", ylabel="Execution Time (seconds)", title="Loading and Georeferencing")
 ax2 = CairoMakie.Axis(fig[1,2], xlabel="number of scanlines", ylabel="Execution Time (seconds)", title="Radiance to Reflectance Conversion", yaxisposition=:right)
@@ -146,7 +150,7 @@ fig
 
 
 save("paper/figures/reflectance-timing.png", fig)
-save("paper/figures/reflectance-timing.pdf", fig)
+save("paper/figures/reflectance-timing.pdf", fig
 save("paper/figures/reflectance-timing.eps", fig)
 save("paper/figures/reflectance-timing.svg", fig)
 

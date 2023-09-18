@@ -68,9 +68,18 @@ function generateReflectance!(Data, specpath, spechdr, λs)
     adjustedSpec = interp.(λs)
 
     # compute reflectance values, clamping them to be ∈ [0, 1]
-    @tturbo for j ∈ axes(Data,3), i ∈ axes(Data,2), λ ∈ axes(Data,1)
-        Data[λ, i, j] = clamp(π * Data[λ, i, j] / adjustedSpec[λ], 0.0, 1.0)
+    # @tturbo for j ∈ axes(Data,3), i ∈ axes(Data,2), λ ∈ 1:length(λs)
+    #     Data[λ, i, j] = clamp(π * Data[λ, i, j] / adjustedSpec[λ], 0.0, 1.0)
+    # end
+
+    Threads.@threads for j ∈ axes(Data,3)
+        for i ∈ axes(Data,2)
+            for λ ∈ 1:length(λs)
+                Data[λ, i, j] = clamp(π * Data[λ, i, j] / adjustedSpec[λ], 0.0, 1.0)
+            end
+        end
     end
+
 end
 
 
