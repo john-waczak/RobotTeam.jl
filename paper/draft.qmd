@@ -1,0 +1,105 @@
+---
+title: "A Procedure for the Rapid Processing and Georeferencing of Hyperspectral Imagery for Real-Time use by an Autonomous Aerial Vehicle"
+date: today
+author: "John Waczak"
+format:
+    pdf: default
+reference-location: margin
+citation-location: margin
+bibliography: references.bib
+---
+
+
+# Abstract
+
+Recent developments in hyperspectral imaging technology have led to dramatic reductions in both size and weight of imaging platforms. Due to these improvements, it is now possible to incorporate the technology as the payload of highly mobile autonomous aerial vehicles such as drones. However, the massive volume of hyperperspectral datacubes poses significant computational challenges to their adoption in real-time applications. In this paper, we demonstrate a procedure for the rapid georeferencing of pushbroom imagery and demonstrate its application for real-time remote sensing... Results indicate that a typical image can be processed in ~10 seconds while it takes $x$ seconds to capture. 
+
+# Introduction
+
+For decades, *multi-spectral imagers* have seen wide spread adoption in the remote sensing community as a means to take advantage of the wealth of information contained in the reflectance spectra of materials. In addition to the three color filters of traditional cameras, *multi-spectral* imagers, like those deployed on MODIS, Sentinel 2, and other satellite missions, capture many additional features by utilizing wavelength bands ranging from the near-UV, through the visible spectrum, and into the Infrared. With this additional information, multi-spectral remote sensing platforms are able to aid in a variety of domains from tracking land change, characterizing deforestation, monitoring erosion, evaluating crop health, and many others (add references here). 
+
+(**add a figure showing the different wavelength bands of publically available satellites**)
+
+These uses are justified by the reflectance features of materials across the electromagnetic spectrum; water has vibrational modes in the IR, pigments have absorption peaks in the visible, etc...(discuss the particular features present in different regions of the reflectance spectrum). Many currently used spectral indices like the *normalized difference vegatation index* (NDVI) take advantage of these spectral regions by comparing ratios of pigment sensitive passbands to the constant signals infrared to infer the abundance of chlorophyll, and consequently, the health of plants, to identify forest canopy, etc..(**add citations and expand**)
+
+However, despite the plethora of successful applications of multi-spectral imaging, more can be accomplished with the additional information provided by fully resolved spectra. For example, in the laboratory, spectrophotometry allows the direct determination of the concentrations of chemicals constituents in solution (**add more detail and references**) by deconvolution of a sample spetrum against libraries carefully collected of reference spectra: individual chemicals be uniquely identified by the characterstic location and shape of their absorption features. We should mention something about algal blooms-- harmful species display shifted reflectance peaks that can be used to identify toxic species. This information is effectively filtered away by the broad passbands of existing (find the spectra used in that book that show the different species of algae). To that end, *hyperspectral imagers* (HSI), which sample hundreds of wavelength binds at each pixel, have become the natural next step for remote sensing platforms with many planned to deployed in the coming years (**add references about soon-to-be-deployed HSI satellites**). 
+
+
+At the terrestrial level, drones (commonly, quadcoptrs, octocopters, and other similar multi-rotor craft) equipped with cameras are able to utlize techniques of photogrametry together with continuously sampled imagery to produce high quality digital elevation maps, high quality mosaics, 3-dimensional reconstructions, etc... These capabilities provide significant aid for structural analysis, smart agriculture, etc... Today, kilogram-scale HSI can be comfortably mounted to the payload of film-scale drones such as the AltaX and advancements in spectral sensing such as (**reference Ethan Minot's recent paper**) suggest that sizes of HSI will continue to shrink further expanding their application in this domain. 
+
+
+
+In our previous work, we demonstrated a prototype autonomous robot team employing a drone based hyper-spectral imager which can learn the mapping from reflectance spectra to concentrations of variety of chemicals-of-concern by utilizing the information contained in the reflectance spectra captured with a HSI  [@robot-team-1]. In this paper, we present a procedure based on the method of [@muller-georeferencing] for the rapid processing and georeferencing of imagery captured by a pushbroom HSI mounted on an autonomous. 
+
+
+
+
+
+
+
+
+In this paper we implement a procedure for the rapid georeferencing of pushbroom hyper-spectral imagery acquired by an autonomous aerial vehicle, and in doing so, demonstrate the feasibility of the platform for real-time characterization of novel environments. 
+
+In the face of rapidly accelerating global change, there is a demonstrated need for advanced remote sensing technologies. For decades
+
+## Georeferencing of Remote Sensing Imagery
+
+- Paragraph about the need of georectification 
+    - Georectification = georeference + orthorectification
+    - outline other papers that have discussed georectification techniques: 
+        - ground control points 
+        - IMU / GPS 
+        - different type of sensors: square, pushbroom, whiskbroom
+
+## Hyperspectral Imaging 
+
+- multi-spectral and hyper-spectral imaging
+- in remote sensing
+    - discuss satellite remote sensing 
+    - multi-spectral platforms: MODIS, Sentinel, etc... 
+    - upcoming hyper-spectral platforms:
+- from Airplanes
+- Land change tracking (water erosion, deforestation, desertification )
+- Mention popular spectral indices like the NDVI
+
+## Towards Real-time Applications 
+
+This is where we can discuss chief technical difficulties for the use of Hyperspectral Imaging in real-time applications and the need for georeferencing.
+
+## Drone Based Platforms
+
+- Paragraph about use of drones for remote sensing 
+    - smart agriculture
+    - photogrametry and DEMs (Open Drone Map) 
+
+
+- Paragraph about difficulties of real time HSI application 
+    - data volume (storage, transfer/streaming)
+    - payload size 
+    - what we really want (usually) isn't the full spectra at each pixel 
+        - spectral indices (NDVI, etc.) 
+        - Chemical concentrations (chlorophyll, crude oil, etc...) 
+
+- Paragraph about advances in hyper-spectral imaging technology, drones, and miniaturized computers (e.g. the raspberry pi, jetson nano, intel nuc, etc...) 
+
+- Challenges of using HSI in real-time applications: Data volume, processing power, data streaming. Data are much to big to be streamed to the ground in real time; for this application, imagery need to be collected, georeferenced, and then turned into data products \emph{onboard the drone} before they can be readily streamed to the ground. We can always re-process the imagery later for an in-depth reanalysis, but for time-critical applications, we need all of the processing to happen on board the drone. 
+
+- finally, introduce the paper via the Robot team --> e.g. cite the paper and talk about how we're going to focus on the drone in detail in this paper. 
+
+IMU - inertial measurement unit
+
+
+
+In the realm of remote sensing, the utilization of multi-spectral and hyper-spectral imaging technologies has ushered in a new era of unprecedented capabilities for Earth observation and environmental monitoring. Multi-spectral imaging, which captures data across a limited number of discrete spectral bands, and hyper-spectral imaging, which offers a significantly higher number of finely spaced spectral channels, have become invaluable tools for discerning intricate details of our planet's surface and atmosphere. These advanced imaging techniques enable researchers to detect and analyze subtle variations in the reflectance, absorption, and emission properties of materials across the electromagnetic spectrum. They have found applications in a myriad of fields, from agriculture and forestry to geology and environmental science, by enhancing our ability to discriminate between different land cover types, identify chemical compositions, and monitor changes in vegetation health and atmospheric constituents \cite{remote-sensing-foliage, crop-indices-2000}.
+
+# Materials and Methods 
+
+## An HSI Equipped Autonomous Aerial Vehicle
+
+
+
+# Results 
+
+# Discusion
+
+# Conclusion
