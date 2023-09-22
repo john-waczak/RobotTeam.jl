@@ -27,70 +27,28 @@ However, despite the plethora of successful applications of multi-spectral imagi
 
 At the terrestrial level, drones (commonly, quadcoptrs, octocopters, and other similar multi-rotor craft) equipped with cameras are able to utlize techniques of photogrametry together with continuously sampled imagery to produce high quality digital elevation maps, high quality mosaics, 3-dimensional reconstructions, etc... These capabilities provide significant aid for structural analysis, smart agriculture, etc... Today, kilogram-scale HSI can be comfortably mounted to the payload of film-scale drones such as the AltaX and advancements in spectral sensing such as (**reference Ethan Minot's recent paper**) suggest that sizes of HSI will continue to shrink further expanding their application in this domain. 
 
+We should now make the argument about the need for improved methods for processing of HSI due the their dramatically larger size, i.e. the standard workflow of collecting imagery and then post processing (re: Open Drone Map) is a fantastic and well tested solution but prevents the use in time-critical applications. We can also reference the continued improvements to single-board computers such as the raspberry pi 4b (8 Gb of Ram), Jetson family (GPU equipped), and intel nuc (powerful work horses with miniscule form factors). To make real-time possible we need two things: 
+1. Conversion from raw data (digital counts) to physical units like Reflectance 
+2. Georeferencing of captured imagery so features can be quickly geolocated
+
+We can always re-process the imagery later for an in-depth reanalysis, but for time-critical applications, we need all of the processing to happen on board the drone. 
 
 
-In our previous work, we demonstrated a prototype autonomous robot team employing a drone based hyper-spectral imager which can learn the mapping from reflectance spectra to concentrations of variety of chemicals-of-concern by utilizing the information contained in the reflectance spectra captured with a HSI  [@robot-team-1]. In this paper, we present a procedure based on the method of [@muller-georeferencing] for the rapid processing and georeferencing of imagery captured by a pushbroom HSI mounted on an autonomous. 
+Add a paragraph about georeferencing in particular:
+- Georectification = georeference + orthorectification
+- outline other papers that have discussed georectification techniques:
+    - ground control points  (not reasonable for dangerous or water-based environments)
+    - IMU / GPS
+    - different type of sensors: square, pushbroom, whiskbroom
 
+Discuss configurations of imagers and the development of georeferencing strategies, e.g. starting with the Muller paper and going to today. Mention potential for the incorporation of digital elevation maps together enabled by GPUs and video game engines (**reference that one paper that suggests using Unity or something similar for the projective geometry optimized for Cuda on NVIDIA GPUs**).
 
+In our previous work, we demonstrated a prototype autonomous robot team employing a drone based hyper-spectral imager which can learn the mapping from reflectance spectra to concentrations of variety of chemicals-of-concern by utilizing the information contained in the reflectance spectra captured with a HSI  [@robot-team-1]. In this paper, we present a procedure based on the method of [@muller-georeferencing] for the rapid processing and georeferencing of imagery captured by a pushbroom HSI mounted on an autonomous. Associated code can be freely accessed and downloaded in (**add reference to our repository**)
 
-
-
-
-
-
-In this paper we implement a procedure for the rapid georeferencing of pushbroom hyper-spectral imagery acquired by an autonomous aerial vehicle, and in doing so, demonstrate the feasibility of the platform for real-time characterization of novel environments. 
-
-In the face of rapidly accelerating global change, there is a demonstrated need for advanced remote sensing technologies. For decades
-
-## Georeferencing of Remote Sensing Imagery
-
-- Paragraph about the need of georectification 
-    - Georectification = georeference + orthorectification
-    - outline other papers that have discussed georectification techniques: 
-        - ground control points 
-        - IMU / GPS 
-        - different type of sensors: square, pushbroom, whiskbroom
-
-## Hyperspectral Imaging 
-
-- multi-spectral and hyper-spectral imaging
-- in remote sensing
-    - discuss satellite remote sensing 
-    - multi-spectral platforms: MODIS, Sentinel, etc... 
-    - upcoming hyper-spectral platforms:
-- from Airplanes
-- Land change tracking (water erosion, deforestation, desertification )
-- Mention popular spectral indices like the NDVI
-
-## Towards Real-time Applications 
-
-This is where we can discuss chief technical difficulties for the use of Hyperspectral Imaging in real-time applications and the need for georeferencing.
-
-## Drone Based Platforms
-
-- Paragraph about use of drones for remote sensing 
-    - smart agriculture
-    - photogrametry and DEMs (Open Drone Map) 
-
-
-- Paragraph about difficulties of real time HSI application 
-    - data volume (storage, transfer/streaming)
-    - payload size 
-    - what we really want (usually) isn't the full spectra at each pixel 
-        - spectral indices (NDVI, etc.) 
-        - Chemical concentrations (chlorophyll, crude oil, etc...) 
-
-- Paragraph about advances in hyper-spectral imaging technology, drones, and miniaturized computers (e.g. the raspberry pi, jetson nano, intel nuc, etc...) 
-
-- Challenges of using HSI in real-time applications: Data volume, processing power, data streaming. Data are much to big to be streamed to the ground in real time; for this application, imagery need to be collected, georeferenced, and then turned into data products \emph{onboard the drone} before they can be readily streamed to the ground. We can always re-process the imagery later for an in-depth reanalysis, but for time-critical applications, we need all of the processing to happen on board the drone. 
-
-- finally, introduce the paper via the Robot team --> e.g. cite the paper and talk about how we're going to focus on the drone in detail in this paper. 
+(**This point can be saved for the supervised learning paper**) what we really want (usually) isn't the full spectra at each pixel 
 
 IMU - inertial measurement unit
 
-
-
-In the realm of remote sensing, the utilization of multi-spectral and hyper-spectral imaging technologies has ushered in a new era of unprecedented capabilities for Earth observation and environmental monitoring. Multi-spectral imaging, which captures data across a limited number of discrete spectral bands, and hyper-spectral imaging, which offers a significantly higher number of finely spaced spectral channels, have become invaluable tools for discerning intricate details of our planet's surface and atmosphere. These advanced imaging techniques enable researchers to detect and analyze subtle variations in the reflectance, absorption, and emission properties of materials across the electromagnetic spectrum. They have found applications in a myriad of fields, from agriculture and forestry to geology and environmental science, by enhancing our ability to discriminate between different land cover types, identify chemical compositions, and monitor changes in vegetation health and atmospheric constituents \cite{remote-sensing-foliage, crop-indices-2000}.
 
 # Materials and Methods 
 
