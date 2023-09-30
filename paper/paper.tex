@@ -67,8 +67,8 @@
 
 %=================================================================
 % Full title of the paper (Capitalized)
-\Title{Rapid Georeferencing n of Pushbroom Hyperspectral Imagery for Real Time Processing by an Autonomous Aerial Vehicle}
-
+\Title{Rapid Processing and Georeferencing of Pushbroom Hyperspectral Imagery for Real Time Application by an Autonomous Aerial Vehicle}
+%\Title{A Procedure for the Rapid Processing and Georeferencing of Hyperspectral Imagery for Real-Time use by an Autonomous Aerial Vehicle}
 % MDPI internal command: Title for citation in the left column
 \TitleCitation{Title}
 
@@ -166,12 +166,11 @@ $^{2}$ \quad Affiliation 2; e-mail@e-mail.com}
 
 For decades, multi-spectral imagers have seen wide spread adoption in the remote sensing community as a means to take advantage of the wealth of information contained in the reflectance spectra of materials. In addition to the three color filters of traditional cameras, multi-spectral imagers, like those deployed on MODIS, Landsat, Sentinel 2, and a plethora of other satellite missions, capture many additional features by utilizing wavelength bands ranging from the near-UV, through the visible spectrum, and into the Infrared. With this additional spectral information, multi-spectral remote sensing platforms are able to aid in a variety of domains like vegetation monitoring, land use classification, water quality assessment, smart agriculture, environmental change detection, and disaster management \textbf{(add references)}. 
 
-(**add a figure showing the different wavelength bands of publicly available satellites**)
 \begin{figure}[H]
     \centering
-    \includegraphics[width=12cm]{./assets/passbands.eps}
-    \caption{Components of the Autonomous Drone HSI platform.}
-    \label{fig:drone-components}
+    \includegraphics[width=15cm]{./assets/passbands.eps}
+    \caption{Relative spectral response for the wavelength passbands of the popular multi-spectral remote sensing sources Sentinel 2A, Sentinel 2B, Landsat 8, and MODIS. Data from the USGS}
+    \label{fig:passbands}
 \end{figure}
 
 
@@ -373,6 +372,11 @@ NOTE: we need to update these timings by first copying the HSI to the local driv
 Discuss drawbacks (striping in images) 
 
 Authors should discuss the results and how they can be interpreted from the perspective of previous studies and of the working hypotheses. The findings and their implications should be discussed in the broadest context possible. Future research directions may also be highlighted.
+
+\begin{figure}[H]
+    \includegraphics[width=10.5 cm]{./figures/mNDWI_example.png}
+\caption{Sample data product created on-board the aerial vehicle. The modified normalized difference water index is computed for each HSI and combined into a map. The plume of Rhodamine dye can clearly be seen in the water.\label{fig-map}}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions}
