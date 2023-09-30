@@ -164,9 +164,16 @@ $^{2}$ \quad Affiliation 2; e-mail@e-mail.com}
 \section{Introduction}
 
 
-For decades, multi-spectral imagers* have seen wide spread adoption in the remote sensing community as a means to take advantage of the wealth of information contained in the reflectance spectra of materials. In addition to the three color filters of traditional cameras, *multi-spectral* imagers, like those deployed on MODIS, Sentinel 2, and other satellite missions, capture many additional features by utilizing wavelength bands ranging from the near-UV, through the visible spectrum, and into the Infrared. With this additional information, multi-spectral remote sensing platforms are able to aid in a variety of domains from tracking land change, characterizing deforestation, monitoring erosion, evaluating crop health, and many others (add references here). 
+For decades, multi-spectral imagers have seen wide spread adoption in the remote sensing community as a means to take advantage of the wealth of information contained in the reflectance spectra of materials. In addition to the three color filters of traditional cameras, multi-spectral imagers, like those deployed on MODIS, Landsat, Sentinel 2, and a plethora of other satellite missions, capture many additional features by utilizing wavelength bands ranging from the near-UV, through the visible spectrum, and into the Infrared. With this additional spectral information, multi-spectral remote sensing platforms are able to aid in a variety of domains like vegetation monitoring, land use classification, water quality assessment, smart agriculture, environmental change detection, and disaster management \textbf{(add references)}. 
 
-(**add a figure showing the different wavelength bands of publically available satellites**)
+(**add a figure showing the different wavelength bands of publicly available satellites**)
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{./assets/passbands.eps}
+    \caption{Components of the Autonomous Drone HSI platform.}
+    \label{fig:drone-components}
+\end{figure}
+
 
 These uses are justified by the reflectance features of materials across the electromagnetic spectrum; water has vibrational modes in the IR, pigments have absorption peaks in the visible, etc...(discuss the particular features present in different regions of the reflectance spectrum). Many currently used spectral indices like the *normalized difference vegatation index* (NDVI) take advantage of these spectral regions by comparing ratios of pigment sensitive passbands to the constant signals infrared to infer the abundance of chlorophyll, and consequently, the health of plants, to identify forest canopy, etc..(**add citations and expand**)
 
@@ -208,6 +215,8 @@ IMU - inertial measurement unit
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Materials and Methods}
+
+Make sure to use \textit{nadir-oriented} in description of HSI on the drone. 
 
 \subsection{Autonomous Aerial Vehicle}
 
