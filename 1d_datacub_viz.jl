@@ -45,12 +45,12 @@ h5path = joinpath(outpath, "12-09", "Dye_1", "Dye_1-6.h5")
 
 h5 = h5open(h5path, "r")
 
+λs = read(h5["data-Δx_0.1/λs"])
 Latitudes = read(h5["data-Δx_0.1/Latitudes"])
 Longitudes = read(h5["data-Δx_0.1/Longitudes"])
-Data_μ = read(h5["data-Δx_0.1/Data_μ"])
+Data = read(h5["data-Δx_0.1/Data"])
 varnames = read(h5["data-Δx_0.1/varnames"])
 printnames = read(h5["data-Δx_0.1/printnames"])
-λs = read(h5["data-Δx_0.1/λs"])
 
 rgb = getRGB(h5)
 
@@ -93,18 +93,22 @@ end
 
 fnames = joinpath.(fpath, readdir(fpath))
 
+fnames
+
+
 let
     hsi = HyperspectralImage(
         fnames[1],
         fnames[2],
         fnames[4],
         fnames[3],
-        fnames[5],
-        fnames[6];
         isflipped=true
-    );
+    )
+    xs, ys, isnorth, zone, Longitudes, Latitudes, IsInbounds, varnames, printnames, λs, Data = resample_datacube(hsi)
+    generateReflectance!(Data, fnames[5], fnames[6], λs)
+    generate_derived_metrics!(Data, IsInbounds, varnames, λs)
 
-    ref_dat .= hsi.Reflectance[1:length(λs), 100, 100]
+    ref_dat .= Data[1:length(λs), 100, 100]
 end
 
 
@@ -190,7 +194,7 @@ fig
 
 # plot single HSI on map (1209 Dye_1-6)
 varnames[indices_metrics[1]]
-m1 = Data_μ[indices_metrics[1],:,:]
+m1 = Data[indices_metrics[1],:,:]
 
 thresh_h2o = 0.25
 idxs_h2o = findall(m1 .≥ thresh_h2o)
@@ -258,8 +262,8 @@ for f ∈ CollectionsDict[day][run]
             h5open(h5path, "r") do h5
                 Latitudes = h5["data-Δx_$(Δx)/Latitudes"][:, :]
                 Longitudes = h5["data-Δx_$(Δx)/Longitudes"][:, :]
-                Data_mndwi = h5["data-Δx_$(Δx)/Data_μ"][idx_mndwi, :, :]
-                Data = h5["data-Δx_$(Δx)/Data_μ"][idx, :, :]
+                Data_mndwi = h5["data-Δx_$(Δx)/Data"][idx_mndwi, :, :]
+                Data = h5["data-Δx_$(Δx)/Data"][idx, :, :]
 
                 # get indices of non-water pixels
                 idx_not_h2o = findall(Data_mndwi .< h2o_thresh)

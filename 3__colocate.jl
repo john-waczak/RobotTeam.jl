@@ -33,7 +33,7 @@ function update_features!(X_features, df, collection_id)
                     Xmin,Xmax = extrema(X_h5)
                     Ymin,Ymax = extrema(Y_h5)
 
-                    Data = read(h5["data-Δx_0.1/Data_μ"])
+                    Data = read(h5["data-Δx_0.1/Data"])
 
                     Xs = [x for x ∈ X_h5, y ∈ Y_h5]
                     Ys = [y for x ∈ X_h5, y ∈ Y_h5]

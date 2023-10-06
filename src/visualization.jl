@@ -37,7 +37,7 @@ function getRGB(hsi::HyperspectralImage; λred=630.0, λgreen=532.0, λblue=465.
     idx_g = argmin(abs.(λs .- λgreen))
     idx_b = argmin(abs.(λs .- λblue))
 
-    img = hsi.Reflectance[[idx_r, idx_g, idx_b], :, :]
+    img = hsi.Datacube[[idx_r, idx_g, idx_b], :, :]
 
     imgp = process_image(img)
 

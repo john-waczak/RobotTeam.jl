@@ -35,27 +35,28 @@ f = get_raw_file_list(get_bil_files(basepath, "Dye_1")[1])
 
 
 # read in the HSI
-hsi = HyperspectralImage(f.bilpath, f.bilhdr, f.lcfpath, f.timespath, f.specpath, f.spechdr; isflipped=true);
+hsi = HyperspectralImage(f.bilpath, f.bilhdr, f.lcfpath, f.timespath; isflipped=true);
 
-img = getRGB(hsi)
-fig, ax, hm = heatmap(img)
-size(img)
+# img = getRGB(hsi)
+# fig, ax, hm = heatmap(img)
+# size(img)
 
 
-# 1. create visualization of un-georectified HSI
-size_in_inches = (3, 3)
-dpi = 600
-size_in_pixels = size_in_inches .* dpi
+# # 1. create visualization of un-georectified HSI
+# size_in_inches = (3, 3)
+# dpi = 600
+# size_in_pixels = size_in_inches .* dpi
 
-fig = vis_cube(hsi; cmap=:jet, offset=0.1, ibounds=(250,1600), resolution=size_in_pixels)
+# fig = vis_cube(hsi; cmap=:jet, offset=0.1, ibounds=(250,1600), resolution=size_in_pixels)
 
-save("./paper/figures/demo-cube.png", fig)
+# save("./paper/figures/demo-cube.png", fig)
 
 
 # 2. create visualization of georectified HSI
 
 # now let's visualize the georectified cube
 xs, ys, isnorth, zone, Longitudes, Latitudes, IsInbounds, varnames, printnames, λs, Data_μ = resample_datacube_fast(hsi; Δx=Δx)
+generateReflectance!(Data_μ, f.specpath, f.spechdr, λs)
 
 
 size_in_inches = (3, 3)
