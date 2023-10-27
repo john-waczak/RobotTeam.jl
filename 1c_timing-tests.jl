@@ -150,7 +150,7 @@ fig
 
 
 save("paper/figures/reflectance-timing.png", fig)
-save("paper/figures/reflectance-timing.pdf", fig
+save("paper/figures/reflectance-timing.pdf", fig)
 save("paper/figures/reflectance-timing.eps", fig)
 save("paper/figures/reflectance-timing.svg", fig)
 

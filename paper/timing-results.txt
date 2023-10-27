@@ -8,43 +8,43 @@ Resampling timings for a cube of length 1000:
 ---
 Resampling results for Δx=5
 ---
-9.064790972
+9.569191707
 ---
 Resampling results for Δx=10
 ---
-4.624102686
+4.8990573355
 ---
 Resampling results for Δx=15
 ---
-4.043662244
+4.1670345115
 ---
 Resampling results for Δx=20
 ---
-3.4601574975
+3.7959268795
 ---
 Resampling results for Δx=25
 ---
-3.295919577
+3.4865719855
 ---
 Resampling results for Δx=30
 ---
-3.2251941465
+3.3991871465
 ---
 Resampling results for Δx=35
 ---
-3.1401654115
+3.4841186805
 ---
 Resampling results for Δx=40
 ---
-3.220453011
+3.348649971
 ---
 Resampling results for Δx=45
 ---
-3.085812473
+3.310714405
 ---
 Resampling results for Δx=50
 ---
-3.058148726
+3.2637558685
 
 --------------------------
 
@@ -55,19 +55,19 @@ Georeferencing and Loading:
 ---
 Loading and Georeferencing time for 371 scanlines
 ---
-0.5487599492999999
+0.5645216783333333
 
 
 ---
 Loading and Georeferencing time for 462 scanlines
 ---
-0.702373885625
+0.70738628925
 
 
 ---
 Loading and Georeferencing time for 1000 scanlines
 ---
-1.477659246
+1.5588840245
 
 
 
@@ -80,18 +80,18 @@ Reflectance conversion:
 ---
 Reflectance conversion time for 371 scanlines
 ---
-0.1604649010625
+0.16298212522580643
 
 
 ---
 Reflectance conversion time for 462 scanlines
 ---
-0.1968414565185185
+0.1958161574074074
 
 
 ---
 Reflectance conversion time for 1000 scanlines
 ---
-0.19502743126923078
+0.19953528253846153
 
 

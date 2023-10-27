@@ -111,7 +111,8 @@ function generateCoords!(
     Threads.@threads for line ∈ 1:lines
         # compute scale factor
         #s = (droneCoords[3,line]-z_ground)/focal_length
-        s = (droneCoords[3,line]-z_ground)/(focal_length*cos(θ[line]))
+        #s = (droneCoords[3,line]-z_ground)/(focal_length*cos(θ[line])))
+        s = (droneCoords[3,line]-z_ground)/(focal_length*cos(θ[line])*cos(ϕ[line]))  # need to also include roll
 
         # compute object coords in UTM
         # T_n_E is conversion from navigation frame to earth frame
