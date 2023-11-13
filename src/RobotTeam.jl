@@ -18,7 +18,6 @@ using .Georectification
 export generateReflectance!
 export generateDerivedMetrics!
 export generateCoords!
-export build_mesh
 export bump_to_nearest_Δx, get_new_bounds, get_resampled_grid, resample_datacube, save_resampled_hsi
 export resample_datacube_fast, save_resampled_hsi_fast
 export generate_derived_metrics!
@@ -34,6 +33,6 @@ export importAirMar, importCOM1, importCOM2, importCOM3, importLISST, importNMEA
 
 include("visualization.jl")
 using .Visualization
-export process_image, getRGB, vis_cube, vis_rectified_cube
+export process_image, getRGB, vis_rectified_cube
 
 end

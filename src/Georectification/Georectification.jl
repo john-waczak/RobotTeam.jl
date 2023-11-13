@@ -6,7 +6,6 @@ using HDF5
 using StaticArrays
 using LinearAlgebra
 using Geodesy
-using Meshes
 using RelocatableFolders
 using SolarGeometry
 using Statistics
@@ -29,10 +28,6 @@ export generateReflectance!
 
 include("georectify.jl")
 export generateCoords!
-
-
-include("mesh.jl")
-export build_mesh
 
 
 include("resample.jl")
