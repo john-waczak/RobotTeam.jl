@@ -78,13 +78,13 @@ X_features = Matrix{Float64}(undef, nrow(df), length(features_dict[:varnames]))
 X_features .= NaN
 
 
-# first let's start with collection 2 since it's closer to the boat time
-update_features!(X_features, df, "Scotty_2")
+# first let's start with collection 1
+update_features!(X_features, df, "Scotty_1")
 
 idxs_nans = [all(isnan.(X_features[i,:])) for i in 1:size(X_features, 1)]
 println(sum(idxs_nans))
 
-update_features!(X_features, df, "Scotty_1")
+update_features!(X_features, df, "Scotty_2")
 
 idxs_nans = [all(isnan.(X_features[i,:])) for i in 1:size(X_features, 1)]
 println(sum(idxs_nans))
