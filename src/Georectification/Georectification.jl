@@ -24,7 +24,7 @@ const offset_hdr = @path normpath(joinpath(@__DIR__, "../../assets", "calibratio
 @assert ispath(offset_hdr)
 
 include("reflectance.jl")
-export generateReflectance!
+export generateReflectance!, generateReflectance2!
 
 include("georectify.jl")
 export generateCoords!

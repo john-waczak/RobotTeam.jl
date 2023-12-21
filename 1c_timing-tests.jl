@@ -31,6 +31,43 @@ f1 = get_raw_file_list(get_bil_files(basepath, "NoDye_1")[1])
 f2 = get_raw_file_list(get_bil_files(basepath, "NoDye_1")[2])
 f3 = get_raw_file_list(get_bil_files(basepath, "NoDye_1")[3])
 
+
+
+
+
+
+# hsi = HyperspectralImage(f1.bilpath, f1.bilhdr, f1.lcfpath, f1.timespath; isflipped=true)
+
+# xs, ys, IsNorth, zone, Longitudes, Latitudes, IsInBounds, varnames, printnames, λs, Data = resample_datacube(hsi)
+
+# Data_2 = copy(Data)
+
+# idx_inbounds = findall(IsInBounds)
+
+# all(Data[:, idx_inbounds] .== Data_2[:, idx_inbounds])
+
+# @benchmark generateReflectance!(Data, f1.specpath, f2.spechdr, λs)
+# @benchmark generateReflectance2!(Data_2, f1.specpath, f2.spechdr, λs)
+
+
+
+# all(Data[:, idx_inbounds] .== Data_2[:, idx_inbounds])
+
+
+
+size(Data)
+size(IsInBounds)
+
+size(Data1)
+# (469, 595, 396)
+# 936 ms
+t = @benchmark generateReflectance!($Data1, $f1.specpath, $f1.spechdr, $λs)
+ 
+
+
+
+
+
 f = f3
 
 
