@@ -318,15 +318,18 @@ function FlightData(lcfpath::String, timespath::String; year=2020)
     lcf_times = lcf_ts .- lcf_ts[1]  # so that we start at t=0.0
 
     roll = -1.0 .*  @view lcf_data[:,2]  # <-- due to opposite convention used by GPS
-    roll_interp = CubicSpline(roll, lcf_times)
+    #roll_interp = CubicSpline(roll, lcf_times; extrapolate=true)
+    roll_interp = LinearInterpolation(roll, lcf_times; extrapolate=true)
     rolls = roll_interp.(pixel_ts)
 
     pitch = @view lcf_data[:,3]
-    pitch_interp = CubicSpline(pitch, lcf_times)
+    #pitch_interp = CubicSpline(pitch, lcf_times; extrapolate=true)
+    pitch_interp = LinearInterpolation(pitch, lcf_times; extrapolate=true)
     pitches = pitch_interp.(pixel_ts)
 
     heading = @view lcf_data[:,4]
-    heading_interp = CubicSpline(heading, lcf_times)
+    #heading_interp = CubicSpline(heading, lcf_times; extrapolate=true)
+    heading_interp = LinearInterpolation(heading, lcf_times; extrapolate=true)
     headings = heading_interp.(pixel_ts)
 
     lon  = @view lcf_data[:,5]
@@ -338,17 +341,20 @@ function FlightData(lcfpath::String, timespath::String; year=2020)
 
     # xs = [utmz.x for utmz ∈ utmzs]
     lcf_x = [utmz.x for utmz ∈ utmzs]
-    x_interp = CubicSpline(lcf_x, lcf_times)
+    #x_interp = CubicSpline(lcf_x, lcf_times; extrapolate=true)
+    x_interp = LinearInterpolation(lcf_x, lcf_times; extrapolate=true)
     xs = x_interp.(pixel_ts)
 
     # ys = [utmz.y for utmz ∈ utmzs]
     lcf_y = [utmz.y for utmz ∈ utmzs]
-    y_interp = CubicSpline(lcf_y, lcf_times)
+    #y_interp = CubicSpline(lcf_y, lcf_times; extrapolate=true)
+    y_interp = LinearInterpolation(lcf_y, lcf_times; extrapolate=true)
     ys = y_interp.(pixel_ts)
 
     # zs = [utmz.z for utmz ∈ utmzs]
     lcf_z = [utmz.z for utmz ∈ utmzs]
-    z_interp = CubicSpline(lcf_z, lcf_times)
+    #z_interp = CubicSpline(lcf_z, lcf_times; extrapolate=true)
+    z_interp = LinearInterpolation(lcf_z, lcf_times; extrapolate=true)
     zs = z_interp.(pixel_ts)
 
 

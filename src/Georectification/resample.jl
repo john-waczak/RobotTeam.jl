@@ -246,6 +246,7 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
         "WBI",
         "MCRI",
         "TCARI",
+        "Σrad",
     ]
 
     printnames = [
@@ -278,6 +279,7 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
         "Water Band Index",
         "Modified Chlorophyll Absorption Reflectance Index",
         "Transformed Chlorophyll Absorption Reflectance Index",
+        "Total Pixel Intensity",
     ]
 
     # 4. Allocate Data Matrices
@@ -295,7 +297,7 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
     k_az = findfirst(varnames .== "solar_azimuth")
     k_el = findfirst(varnames .== "solar_elevation")
     k_zen = findfirst(varnames .== "solar_zenith")
-
+    k_tot = findfirst(varnames .== "Σrad")
 
     # 6. Resample the data
     println("\tinterpolating...")
@@ -325,6 +327,9 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
 
         # copy Solar Zenith
         @inbounds Data[k_zen, ij] = mean(hsi.SolarZenith[idx_dict[ij]])
+
+        # copy Solar Zenith
+        @inbounds Data[k_tot, ij] = sum(Data[ks_reflectance,ij])
     end
 
 
