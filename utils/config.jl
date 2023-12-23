@@ -54,7 +54,7 @@ end
 θ_view=30.8              # viewing angle
 z_ground=292.0           # ground height (m)
 isflipped=false          # flip pixel orientation
-Δx = 0.50                # resampling resolution (m)
+Δx = 0.10                # resampling resolution (m)
 is_spec_chunked=false    # chunk HDF5 by pixel
 is_band_chunked=false    # chunk HDF5 by band
 
