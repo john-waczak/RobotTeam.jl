@@ -9,7 +9,7 @@ using ProgressMeter
 include("utils/vis_tools.jl")
 include("utils/config.jl")
 
-outpath = "/media/teamlary/LabData/RobotTeam/finalized"
+outpath = "/Users/johnwaczak/data/robot-team/finalized"
 if !ispath(outpath)
     mkpath(outpath)
     mkpath(joinpath(outpath, "11-23"))
@@ -26,14 +26,14 @@ function sort_files_numerical!(flist)
 end
 
 
-basepath_11_23 = "/media/teamlary/LabData/RobotTeam/processed/hsi/11-23"
-basepath_12_09 = "/media/teamlary/LabData/RobotTeam/processed/hsi/12-09"
-basepath_12_10  = "/media/teamlary/LabData/RobotTeam/processed/hsi/12-10"
+basepath_11_23 = "/Users/johnwaczak/data/robot-team/processed/hsi/11-23"
+basepath_12_09 = "/Users/johnwaczak/data/robot-team/processed/hsi/12-09"
+basepath_12_10 = "/Users/johnwaczak/data/robot-team/processed/hsi/12-10"
 
 
-df_11_23 = CSV.read("/media/teamlary/LabData/RobotTeam/prepared/11-23/Targets.csv", DataFrame)
-df_12_09 = CSV.read("/media/teamlary/LabData/RobotTeam/prepared/12-09/Targets.csv", DataFrame)
-df_12_10 = CSV.read("/media/teamlary/LabData/RobotTeam/prepared/12-10/Targets.csv", DataFrame)
+df_11_23 = CSV.read("/Users/johnwaczak/data/robot-team/prepared/11-23/Targets.csv", DataFrame);
+df_12_09 = CSV.read("/Users/johnwaczak/data/robot-team/prepared/12-09/Targets.csv", DataFrame);
+df_12_10 = CSV.read("/Users/johnwaczak/data/robot-team/prepared/12-10/Targets.csv", DataFrame);
 
 
 collections = Dict(
@@ -58,18 +58,18 @@ function find_matching_data(h5_path, df)
 
     h5open(h5_path, "r") do h5
         # read position in meters
-        X_h5 = read(h5["data-Δx_0.1/X"])
-        Y_h5 = read(h5["data-Δx_0.1/Y"])
-        varnames_h5 = read(h5["data-Δx_0.1/varnames"])
+        X_h5 = read(h5["data-Δx_$(Δx)/X"])
+        Y_h5 = read(h5["data-Δx_$(Δx)/Y"])
+        varnames_h5 = read(h5["data-Δx_$(Δx)/varnames"])
         @assert all(features_dict[:varnames] .== varnames_h5)
-        IsInbounds = read(h5["data-Δx_0.1/IsInbounds"])
+        IsInbounds = read(h5["data-Δx_$(Δx)/IsInbounds"])
 
         # get bounds of datacube
         Xmin,Xmax = extrema(X_h5)
         Ymin,Ymax = extrema(Y_h5)
 
         # read in the data
-        Data = read(h5["data-Δx_0.1/Data"])
+        Data = read(h5["data-Δx_$(Δx)/Data"])
 
         # generate coordinate matrices of same dim as Data
         Xs = [x for x ∈ X_h5, y ∈ Y_h5]
@@ -105,7 +105,7 @@ end
 
 
 function get_all_matching_data(collection, collection_id)
-    df_in = CSV.read(joinpath("/media/teamlary/LabData/RobotTeam/prepared/$(collection)/Targets.csv"), DataFrame)
+    df_in = CSV.read(joinpath("/Users/johnwaczak/data/robot-team/prepared/$(collection)/Targets.csv"), DataFrame)
     gdf = groupby(df_in, :predye_postdye)
     df = gdf[(predye_postdye="Pre-Dye",)]
 

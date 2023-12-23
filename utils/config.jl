@@ -1,12 +1,12 @@
 # basepath = "/media/jwaczak/Data/robotteam-data/raw"
 # basepath = "/media/jwaczak/LabData/RobotTeam/raw/hsi"
-basepath = "/media/teamlary/LabData/RobotTeam/raw/hsi"
+basepath = "/Volumes/LabData/RobotTeam/raw/hsi"
 @assert ispath(basepath)
 
 
 # outpath = "/media/jwaczak/Data/robotteam-data/h5"
 # outpath = "/media/jwaczak/LabData/RobotTeam/processed/hsi"
-outpath = "/media/teamlary/LabData/RobotTeam/processed/hsi"
+outpath = "/Users/johnwaczak/data/robot-team/processed/hsi"
 if !ispath(outpath)
     mkpath(outpath)
 end
@@ -54,7 +54,7 @@ end
 θ_view=30.8              # viewing angle
 z_ground=292.0           # ground height (m)
 isflipped=false          # flip pixel orientation
-Δx = 0.10                # resampling resolution (m)
+Δx = 0.50                # resampling resolution (m)
 is_spec_chunked=false    # chunk HDF5 by pixel
 is_band_chunked=false    # chunk HDF5 by band
 
@@ -101,6 +101,7 @@ features_dict = Dict(
         "TCARI",
         "Σrad",
         "Σdownwelling",
+        "yaw_minus_azimuth",
     ],
     :printnames => [
         ["Reflectance Band "*lpad(idx, 3,"0") for idx ∈ 1:462]...,
@@ -134,5 +135,6 @@ features_dict = Dict(
         "Transformed Chlorophyll Absorption Reflectance Index",
         "Total Pixel Intensity",
         "Total Downwelling Intensity",
+        "Heading - Solar Azimuth",
     ],
 )

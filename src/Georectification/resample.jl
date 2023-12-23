@@ -248,6 +248,7 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
         "TCARI",
         "Σrad",
         "Σdownwelling",
+        "yaw_minus_azimuth",
     ]
 
     printnames = [
@@ -282,6 +283,7 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
         "Transformed Chlorophyll Absorption Reflectance Index",
         "Total Pixel Intensity",
         "Total Downwelling Intensity",
+        "Heading - Solar Azimuth",
     ]
 
     # 4. Allocate Data Matrices
@@ -299,6 +301,7 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
     k_az = findfirst(varnames .== "solar_azimuth")
     k_el = findfirst(varnames .== "solar_elevation")
     k_zen = findfirst(varnames .== "solar_zenith")
+    k_yma = findfirst(varnames .== "yaw_minus_azimuth")
     k_tot = findfirst(varnames .== "Σrad")
 
     # 6. Resample the data
@@ -322,13 +325,16 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
         @inbounds Data[k_view, ij] = mean(hsi.ViewAngle[idx_dict[ij]])
 
         # copy Solar Azimuth
-        @inbounds Data[k_az, ij] = mean(hsi.SolarAzimuth[idx_dict[ij]])
+        @inbounds Data[k_az, ij] = mean(hsi.SolarAzimuth[idx_dict[ij]]) *  π / 180.0
 
         # copy Solar Elevation
-        @inbounds Data[k_el, ij] = mean(hsi.SolarElevation[idx_dict[ij]])
+        @inbounds Data[k_el, ij] = mean(hsi.SolarElevation[idx_dict[ij]])  *  π / 180.0
 
         # copy Solar Zenith
-        @inbounds Data[k_zen, ij] = mean(hsi.SolarZenith[idx_dict[ij]])
+        @inbounds Data[k_zen, ij] = mean(hsi.SolarZenith[idx_dict[ij]])  *  π / 180.0
+
+        # compute heading difference
+        @inbounds Data[k_yma, ij] = Data[k_heading, ij] - Data[k_az, ij]
 
         # integrate to obtain per pixel radiance in W/m^2
         @inbounds Data[k_tot, ij] = trapz(hsi.λs .* 1e-3,  π .* Data[ks_reflectance, ij] .* 1e-2)

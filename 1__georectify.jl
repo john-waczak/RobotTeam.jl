@@ -33,7 +33,7 @@ for (day, runs) ∈ CollectionsDict
 
                 println("\tresampling to new grid")
 
-                xs, ys, isnorth, zone, Longitudes, Latitudes, IsInbounds, varnames, printnames, λs, Data = resample_datacube(hsi)
+                xs, ys, isnorth, zone, Longitudes, Latitudes, IsInbounds, varnames, printnames, λs, Data = resample_datacube(hsi; Δx=Δx)
 
                 println("\tconverting to reflectance")
                 generateReflectance!(Data, f.specpath, f.spechdr, λs)
