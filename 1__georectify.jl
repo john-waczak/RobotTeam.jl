@@ -13,11 +13,14 @@ include("utils/config.jl")
 println("Output dir: $outpath")
 
 
+CollectionsDict
+
 for (day, runs) ∈ CollectionsDict
     for (run, fs) ∈ runs
         for f ∈ fs
             println("Processing $(f.bilpath)")
             try
+
 
                 println("\topening HSI")
                 hsi = HyperspectralImage(

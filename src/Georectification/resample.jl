@@ -1,6 +1,6 @@
 using Statistics
 using HDF5
-
+using Trapz
 
 """
     bump_to_nearest_Δx(val, Δx)
@@ -247,6 +247,7 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
         "MCRI",
         "TCARI",
         "Σrad",
+        "Σdownwelling",
     ]
 
     printnames = [
@@ -280,6 +281,7 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
         "Modified Chlorophyll Absorption Reflectance Index",
         "Transformed Chlorophyll Absorption Reflectance Index",
         "Total Pixel Intensity",
+        "Total Downwelling Intensity",
     ]
 
     # 4. Allocate Data Matrices
@@ -328,8 +330,8 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
         # copy Solar Zenith
         @inbounds Data[k_zen, ij] = mean(hsi.SolarZenith[idx_dict[ij]])
 
-        # copy Solar Zenith
-        @inbounds Data[k_tot, ij] = sum(Data[ks_reflectance,ij])
+        # integrate to obtain per pixel radiance in W/m^2
+        @inbounds Data[k_tot, ij] = trapz(hsi.λs .* 1e-3,  π .* Data[ks_reflectance, ij] .* 1e-2)
     end
 
 

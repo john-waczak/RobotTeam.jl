@@ -100,6 +100,7 @@ features_dict = Dict(
         "MCRI",
         "TCARI",
         "Σrad",
+        "Σdownwelling",
     ],
     :printnames => [
         ["Reflectance Band "*lpad(idx, 3,"0") for idx ∈ 1:462]...,
@@ -132,5 +133,6 @@ features_dict = Dict(
         "Modified Chlorophyll Absorption Reflectance Index",
         "Transformed Chlorophyll Absorption Reflectance Index",
         "Total Pixel Intensity",
+        "Total Downwelling Intensity",
     ],
 )

@@ -82,7 +82,7 @@ for (day, collections) ∈ CollectionsDict
             hsi_fs = get_raw_file_list.(get_bil_files(joinpath(hsi_path, day), collection))
             for hsi_f ∈ hsi_fs
                 fd = FlightData(hsi_f.lcfpath, hsi_f.timespath)
-                
+
                 push!(tstarts, fd.start_time)
                 push!(tends, fd.start_time + Millisecond(round(Int, fd.times[end]*1000 + 1)))
             end

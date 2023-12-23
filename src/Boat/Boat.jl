@@ -667,102 +667,132 @@ function combine_boat_dfs(dirpath,
     # go through COM1
     println("\tInterpolating COM1")
     names(com1_df_filtered)
-    Br_interp = CubicSpline(com1_df_filtered.Br, com1_df_filtered.unix_dt)
+    # Br_interp = CubicSpline(com1_df_filtered.Br, com1_df_filtered.unix_dt)
+    Br_interp = LinearInterpolation(com1_df_filtered.Br, com1_df_filtered.unix_dt; extrapolate=true)
     interpolated["Br"] = Br_interp.(interpolated["unix_dt"])
 
-    Ca_interp = CubicSpline(com1_df_filtered.Ca, com1_df_filtered.unix_dt)
+    # Ca_interp = CubicSpline(com1_df_filtered.Ca, com1_df_filtered.unix_dt)
+    Ca_interp = LinearInterpolation(com1_df_filtered.Ca, com1_df_filtered.unix_dt; extrapolate=true)
     interpolated["Ca"] = Ca_interp.(interpolated["unix_dt"])
 
-    Cl_interp = CubicSpline(com1_df_filtered.Cl, com1_df_filtered.unix_dt)
+    # Cl_interp = CubicSpline(com1_df_filtered.Cl, com1_df_filtered.unix_dt)
+    Cl_interp = LinearInterpolation(com1_df_filtered.Cl, com1_df_filtered.unix_dt; extrapolate=true)
     interpolated["Cl"] = Cl_interp.(interpolated["unix_dt"])
 
-    HDO_interp = CubicSpline(com1_df_filtered.HDO, com1_df_filtered.unix_dt)
+    # HDO_interp = CubicSpline(com1_df_filtered.HDO, com1_df_filtered.unix_dt)
+    HDO_interp = LinearInterpolation(com1_df_filtered.HDO, com1_df_filtered.unix_dt; extrapolate=true)
     interpolated["HDO"] = HDO_interp.(interpolated["unix_dt"])
 
-    HDO_percent_interp = CubicSpline(com1_df_filtered.HDO_percent, com1_df_filtered.unix_dt)
+    # HDO_percent_interp = CubicSpline(com1_df_filtered.HDO_percent, com1_df_filtered.unix_dt)
+    HDO_percent_interp = LinearInterpolation(com1_df_filtered.HDO_percent, com1_df_filtered.unix_dt; extrapolate=true)
     interpolated["HDO_percent"] = HDO_percent_interp.(interpolated["unix_dt"])
 
-    NH4_interp = CubicSpline(com1_df_filtered.NH4, com1_df_filtered.unix_dt)
+    # NH4_interp = CubicSpline(com1_df_filtered.NH4, com1_df_filtered.unix_dt)
+    NH4_interp = LinearInterpolation(com1_df_filtered.NH4, com1_df_filtered.unix_dt; extrapolate = true)
     interpolated["NH4"] = NH4_interp.(interpolated["unix_dt"])
 
-    NO3_interp = CubicSpline(com1_df_filtered.NO3, com1_df_filtered.unix_dt)
+    # NO3_interp = CubicSpline(com1_df_filtered.NO3, com1_df_filtered.unix_dt)
+    NO3_interp = LinearInterpolation(com1_df_filtered.NO3, com1_df_filtered.unix_dt; extrapolate=true)
     interpolated["NO3"] = NO3_interp.(interpolated["unix_dt"])
 
-    Na_interp = CubicSpline(com1_df_filtered.Na, com1_df_filtered.unix_dt)
+    # Na_interp = CubicSpline(com1_df_filtered.Na, com1_df_filtered.unix_dt)
+    Na_interp = LinearInterpolation(com1_df_filtered.Na, com1_df_filtered.unix_dt; extrapolate=true)
     interpolated["Na"] = Na_interp.(interpolated["unix_dt"])
 
-    Salinity3488_interp = CubicSpline(com1_df_filtered.Salinity3488, com1_df_filtered.unix_dt)
+    # Salinity3488_interp = CubicSpline(com1_df_filtered.Salinity3488, com1_df_filtered.unix_dt)
+    Salinity3488_interp = LinearInterpolation(com1_df_filtered.Salinity3488, com1_df_filtered.unix_dt; extrapolate=true)
     interpolated["Salinity3488"] = Salinity3488_interp.(interpolated["unix_dt"])
 
-    SpCond_interp = CubicSpline(com1_df_filtered.SpCond, com1_df_filtered.unix_dt)
+    # SpCond_interp = CubicSpline(com1_df_filtered.SpCond, com1_df_filtered.unix_dt)
+    SpCond_interp = LinearInterpolation(com1_df_filtered.SpCond, com1_df_filtered.unix_dt; extrapolate=true)
     interpolated["SpCond"] = SpCond_interp.(interpolated["unix_dt"])
 
-    TDS_interp = CubicSpline(com1_df_filtered.TDS, com1_df_filtered.unix_dt)
+    # TDS_interp = CubicSpline(com1_df_filtered.TDS, com1_df_filtered.unix_dt)
+    TDS_interp = LinearInterpolation(com1_df_filtered.TDS, com1_df_filtered.unix_dt; extrapolate=true)
     interpolated["TDS"] = TDS_interp.(interpolated["unix_dt"])
 
-    Temp3488_interp = CubicSpline(com1_df_filtered.Temp3488, com1_df_filtered.unix_dt)
+    # Temp3488_interp = CubicSpline(com1_df_filtered.Temp3488, com1_df_filtered.unix_dt)
+    Temp3488_interp = LinearInterpolation(com1_df_filtered.Temp3488, com1_df_filtered.unix_dt; extrapolate=true)
     interpolated["Temp3488"] = Temp3488_interp.(interpolated["unix_dt"])
 
-    Turb3488_interp = CubicSpline(com1_df_filtered.Turb3488, com1_df_filtered.unix_dt)
+    # Turb3488_interp = CubicSpline(com1_df_filtered.Turb3488, com1_df_filtered.unix_dt)
+    Turb3488_interp = LinearInterpolation(com1_df_filtered.Turb3488, com1_df_filtered.unix_dt; extrapolate=true)
     interpolated["Turb3488"] = Turb3488_interp.(interpolated["unix_dt"])
 
-    pH_interp = CubicSpline(com1_df_filtered.pH, com1_df_filtered.unix_dt)
+    # pH_interp = CubicSpline(com1_df_filtered.pH, com1_df_filtered.unix_dt)
+    pH_interp = LinearInterpolation(com1_df_filtered.pH, com1_df_filtered.unix_dt; extrapolate=true)
     interpolated["pH"] = pH_interp.(interpolated["unix_dt"])
 
-    pH_mV_interp = CubicSpline(com1_df_filtered.pH_mV, com1_df_filtered.unix_dt)
+    # pH_mV_interp = CubicSpline(com1_df_filtered.pH_mV, com1_df_filtered.unix_dt)
+    pH_mV_interp = LinearInterpolation(com1_df_filtered.pH_mV, com1_df_filtered.unix_dt; extrapolate=true)
     interpolated["pH_mV"] = pH_mV_interp.(interpolated["unix_dt"])
 
 
     # go through COM2
     println("\tInterpolating COM2")
     names(com2_df_filtered)
-    CDOM_interp = CubicSpline(com2_df_filtered.CDOM, com2_df_filtered.unix_dt)
+    # CDOM_interp = CubicSpline(com2_df_filtered.CDOM, com2_df_filtered.unix_dt)
+    CDOM_interp = LinearInterpolation(com2_df_filtered.CDOM, com2_df_filtered.unix_dt; extrapolate=true)
     interpolated["CDOM"] = CDOM_interp.(interpolated["unix_dt"])
 
-    Chl_interp = CubicSpline(com2_df_filtered.Chl, com2_df_filtered.unix_dt)
+    # Chl_interp = CubicSpline(com2_df_filtered.Chl, com2_df_filtered.unix_dt)
+    Chl_interp = LinearInterpolation(com2_df_filtered.Chl, com2_df_filtered.unix_dt; extrapolate=true)
     interpolated["Chl"] = Chl_interp.(interpolated["unix_dt"])
 
-    ChlRed_interp = CubicSpline(com2_df_filtered.ChlRed, com2_df_filtered.unix_dt)
+    # ChlRed_interp = CubicSpline(com2_df_filtered.ChlRed, com2_df_filtered.unix_dt)
+    ChlRed_interp = LinearInterpolation(com2_df_filtered.ChlRed, com2_df_filtered.unix_dt; extrapolate=true)
     interpolated["ChlRed"] = ChlRed_interp.(interpolated["unix_dt"])
 
-    Temp3489_interp = CubicSpline(com2_df_filtered.Temp3489, com2_df_filtered.unix_dt)
+    # Temp3489_interp = CubicSpline(com2_df_filtered.Temp3489, com2_df_filtered.unix_dt)
+    Temp3489_interp = LinearInterpolation(com2_df_filtered.Temp3489, com2_df_filtered.unix_dt; extrapolate=true)
     interpolated["Temp3489"] = Temp3489_interp.(interpolated["unix_dt"])
 
-    Turb3489_interp = CubicSpline(com2_df_filtered.Turb3489, com2_df_filtered.unix_dt)
+    # Turb3489_interp = CubicSpline(com2_df_filtered.Turb3489, com2_df_filtered.unix_dt)
+    Turb3489_interp = LinearInterpolation(com2_df_filtered.Turb3489, com2_df_filtered.unix_dt; extrapolate=true)
     interpolated["Turb3489"] = Turb3489_interp.(interpolated["unix_dt"])
 
-    bg_interp = CubicSpline(com2_df_filtered.bg, com2_df_filtered.unix_dt)
+    # bg_interp = CubicSpline(com2_df_filtered.bg, com2_df_filtered.unix_dt)
+    bg_interp = LinearInterpolation(com2_df_filtered.bg, com2_df_filtered.unix_dt; extrapolate=true)
     interpolated["bg"] = bg_interp.(interpolated["unix_dt"])
 
-    bgm_interp = CubicSpline(com2_df_filtered.bgm, com2_df_filtered.unix_dt)
+    # bgm_interp = CubicSpline(com2_df_filtered.bgm, com2_df_filtered.unix_dt)
+    bgm_interp = LinearInterpolation(com2_df_filtered.bgm, com2_df_filtered.unix_dt; extrapolate=true)
     interpolated["bgm"] = bgm_interp.(interpolated["unix_dt"])
 
 
     # go through COM3
     println("\tInterpolating COM3")
     names(com3_df_filtered)
-    CO_interp = CubicSpline(com3_df_filtered.CO, com3_df_filtered.unix_dt)
+    # CO_interp = CubicSpline(com3_df_filtered.CO, com3_df_filtered.unix_dt)
+    CO_interp = LinearInterpolation(com3_df_filtered.CO, com3_df_filtered.unix_dt; extrapolate=true)
     interpolated["CO"] = CO_interp.(interpolated["unix_dt"])
 
-    OB_interp = CubicSpline(com3_df_filtered.OB, com3_df_filtered.unix_dt)
+    # OB_interp = CubicSpline(com3_df_filtered.OB, com3_df_filtered.unix_dt)
+    OB_interp = LinearInterpolation(com3_df_filtered.OB, com3_df_filtered.unix_dt; extrapolate=true)
     interpolated["OB"] = OB_interp.(interpolated["unix_dt"])
 
-    RefFuel_interp = CubicSpline(com3_df_filtered.RefFuel, com3_df_filtered.unix_dt)
+    # RefFuel_interp = CubicSpline(com3_df_filtered.RefFuel, com3_df_filtered.unix_dt)
+    RefFuel_interp = LinearInterpolation(com3_df_filtered.RefFuel, com3_df_filtered.unix_dt; extrapolate=true)
     interpolated["RefFuel"] = RefFuel_interp.(interpolated["unix_dt"])
 
-    Salinity3490_interp = CubicSpline(com3_df_filtered.Salinity3490, com3_df_filtered.unix_dt)
+    # Salinity3490_interp = CubicSpline(com3_df_filtered.Salinity3490, com3_df_filtered.unix_dt)
+    Salinity3490_interp = LinearInterpolation(com3_df_filtered.Salinity3490, com3_df_filtered.unix_dt; extrapolate=true)
     interpolated["Salinity3490"] = Salinity3490_interp.(interpolated["unix_dt"])
 
-    TDS_interp = CubicSpline(com3_df_filtered.TDS, com3_df_filtered.unix_dt)
+    # TDS_interp = CubicSpline(com3_df_filtered.TDS, com3_df_filtered.unix_dt)
+    TDS_interp = LinearInterpolation(com3_df_filtered.TDS, com3_df_filtered.unix_dt; extrapolate=true)
     interpolated["TDS"] = TDS_interp.(interpolated["unix_dt"])
 
-    TRYP_interp = CubicSpline(com3_df_filtered.TRYP, com3_df_filtered.unix_dt)
+    # TRYP_interp = CubicSpline(com3_df_filtered.TRYP, com3_df_filtered.unix_dt)
+    TRYP_interp = LinearInterpolation(com3_df_filtered.TRYP, com3_df_filtered.unix_dt; extrapolate=true)
     interpolated["TRYP"] = TRYP_interp.(interpolated["unix_dt"])
 
-    Temp3490_interp = CubicSpline(com3_df_filtered.Temp3490, com3_df_filtered.unix_dt)
+    # Temp3490_interp = CubicSpline(com3_df_filtered.Temp3490, com3_df_filtered.unix_dt)
+    Temp3490_interp = LinearInterpolation(com3_df_filtered.Temp3490, com3_df_filtered.unix_dt; extrapolate=true)
     interpolated["Temp3490"] = Temp3490_interp.(interpolated["unix_dt"])
 
-    Turb3490_interp = CubicSpline(com3_df_filtered.Turb3490, com3_df_filtered.unix_dt)
+    # Turb3490_interp = CubicSpline(com3_df_filtered.Turb3490, com3_df_filtered.unix_dt)
+    Turb3490_interp = LinearInterpolation(com3_df_filtered.Turb3490, com3_df_filtered.unix_dt; extrapolate=true)
     interpolated["Turb3490"] = Turb3490_interp.(interpolated["unix_dt"])
 
 
@@ -770,7 +800,8 @@ function combine_boat_dfs(dirpath,
     println("\tInterpolating LISST")
     names(lisst_df_filtered)
     # cubic spline failing for some reason.
-    SSC_interp = QuadraticInterpolation(lisst_df_filtered.SSC, lisst_df_filtered.unix_dt)
+    # SSC_interp = QuadraticInterpolation(lisst_df_filtered.SSC, lisst_df_filtered.unix_dt)
+    SSC_interp = LinearInterpolation(lisst_df_filtered.SSC, lisst_df_filtered.unix_dt; extrapolate=true)
     interpolated["SSC"] = []
     for t ∈ interpolated["unix_dt"]
         try

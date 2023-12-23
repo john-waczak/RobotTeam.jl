@@ -36,10 +36,19 @@ f3 = get_raw_file_list(get_bil_files(basepath, "NoDye_1")[3])
 
 
 
-# hsi = HyperspectralImage(f1.bilpath, f1.bilhdr, f1.lcfpath, f1.timespath; isflipped=true)
+hsi = HyperspectralImage(f1.bilpath, f1.bilhdr, f1.lcfpath, f1.timespath; isflipped=true)
 
-# xs, ys, IsNorth, zone, Longitudes, Latitudes, IsInBounds, varnames, printnames, λs, Data = resample_datacube(hsi)
+xs, ys, IsNorth, zone, Longitudes, Latitudes, IsInBounds, varnames, printnames, λs, Data = resample_datacube(hsi)
 
+generateReflectance!(Data, f1.specpath, f1.spechdr, λs);
+
+IsInbounds
+
+Data[end-1,500,100]
+Data[end,500,100]
+
+varnames
+printnames
 # Data_2 = copy(Data)
 
 # idx_inbounds = findall(IsInBounds)
@@ -62,10 +71,6 @@ size(Data1)
 # (469, 595, 396)
 # 936 ms
 t = @benchmark generateReflectance!($Data1, $f1.specpath, $f1.spechdr, $λs)
- 
-
-
-
 
 
 f = f3

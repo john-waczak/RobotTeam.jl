@@ -3,7 +3,7 @@ using ..ENVI: HyperspectralImage, read_envi_file
 using DataInterpolations
 using LoopVectorization
 using Images
-
+using Trapz
 
 
 # function generateReflectance!(Reflectance, Radiance, specpath, spechdr, λs)
@@ -78,6 +78,11 @@ function generateReflectance!(Data, specpath, spechdr, λs)
                 Data[λ, i, j] = clamp(π * Data[λ, i, j] / adjustedSpec[λ], 0.0, 1.0)
             end
         end
+    end
+
+    # if we have more data than just reflectances
+    if size(Data, 1) > length(λs)
+        Data[end,:,:] .= trapz(λs .* 1e-3, adjustedSpec .* 1e-2)
     end
 end
 
