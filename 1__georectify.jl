@@ -71,4 +71,3 @@ for (day, runs) ∈ CollectionsDict
 end
 
 
-

@@ -82,7 +82,7 @@ function generateReflectance!(Data, specpath, spechdr, λs)
 
     # if we have more data than just reflectances
     if size(Data, 1) > length(λs)
-        Data[end,:,:] .= trapz(λs .* 1e-3, adjustedSpec .* 1e-2)
+        Data[end,:,:] .+= trapz(λs .* 1e-3, adjustedSpec .* 1e-2)
     end
 end
 

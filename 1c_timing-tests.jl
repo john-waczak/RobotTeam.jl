@@ -26,10 +26,14 @@ include("utils/vis_tools.jl")
 include("utils/config.jl")
 
 
-basepath = "/home/teamlary/gitrepos/utd/RobotTeam.jl/data/raw"
+basepath = "/Volumes/LabData/RobotTeam/raw/hsi/12-09"
+@assert ispath(basepath)
+readdir(basepath)
+
 f1 = get_raw_file_list(get_bil_files(basepath, "NoDye_1")[1])
-f2 = get_raw_file_list(get_bil_files(basepath, "NoDye_1")[2])
-f3 = get_raw_file_list(get_bil_files(basepath, "NoDye_1")[3])
+f2 = get_raw_file_list(get_bil_files(basepath, "NoDye_2")[1])
+# f2 = get_raw_file_list(get_bil_files(basepath, "NoDye_1")[2])
+# f3 = get_raw_file_list(get_bil_files(basepath, "NoDye_1")[3])
 
 
 
@@ -40,15 +44,41 @@ hsi = HyperspectralImage(f1.bilpath, f1.bilhdr, f1.lcfpath, f1.timespath; isflip
 
 xs, ys, IsNorth, zone, Longitudes, Latitudes, IsInBounds, varnames, printnames, λs, Data = resample_datacube(hsi)
 
+
+ij_inbounds = findall(IsInBounds)
+extrema(Data[end, ij_inbounds])
+
 generateReflectance!(Data, f1.specpath, f1.spechdr, λs);
 
-IsInbounds
+extrema(Data[end,ij_inbounds])
 
-Data[end-1,500,100]
-Data[end,500,100]
+# make sure the last 3 layers have data
 
-varnames
-printnames
+extrema(Data[end-2,ij_inbounds])
+extrema(Data[end-1,ij_inbounds])
+extrema(Data[end,ij_inbounds])
+
+
+Data[end,:,:]
+
+hsi = HyperspectralImage(f2.bilpath, f2.bilhdr, f2.lcfpath, f2.timespath; isflipped=true)
+
+xs, ys, IsNorth, zone, Longitudes, Latitudes, IsInBounds, varnames, printnames, λs, Data = resample_datacube(hsi)
+
+generateReflectance!(Data, f2.specpath, f2.spechdr, λs);
+
+
+# make sure the last 3 layers have data
+ij_inbounds = findall(IsInBounds)
+
+extrema(Data[end-2,ij_inbounds])
+extrema(Data[end-1,ij_inbounds])
+extrema(Data[end,ij_inbounds])
+
+Data[end,:,:]
+
+NaN + 1.0
+
 # Data_2 = copy(Data)
 
 # idx_inbounds = findall(IsInBounds)
