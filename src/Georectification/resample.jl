@@ -241,7 +241,7 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
         "LCI",
         "MNLI",
         "MSAVI2",
-        "Modified Simple Ratio",
+        "MSR",
         "NLI",
         "NDVI",
         "NPCI",
@@ -639,6 +639,8 @@ function generate_derived_metrics!(Data, IsInbounds, varnames, λs)
 
     numer = (band_nir ./ band_red) .- 1.0
     denom = sqrt.(band_nir ./ band_red) .+ 1.0
+    Data[k_wav,:,:] = numer ./ denom
+
 
     # NLI: Nonlinear Index
     k_wav += 1

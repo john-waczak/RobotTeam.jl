@@ -94,7 +94,7 @@ features_dict = Dict(
         "LCI",
         "MNLI",
         "MSAVI2",
-        "Modified Simple Ratio",
+        "MSR",
         "NLI",
         "NDVI",
         "NPCI",
