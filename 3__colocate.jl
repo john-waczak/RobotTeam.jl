@@ -1,5 +1,6 @@
 using RobotTeam
 
+using Statistics
 using HDF5
 using Dates
 using CSV, DataFrames
@@ -86,12 +87,26 @@ function find_matching_data(h5_path, df)
             if row.X ≥ Xmin && row.X ≤ Xmax && row.Y ≥ Ymin && row.Y ≤ Ymax
                 idx = findfirst(row.X .== Xs .&& row.Y .== Ys)
                 if !isnothing(idx)
-                    if IsInbounds[idx]
-                        # push!(df_features_out, Data[:,idx])
-                        # push!(df_targets_out, df[i,:])
-                        push!(idx_match_hsi, idx)
-                        push!(idx_match_df, i)
+
+                    # once we have a match, create a mask surrouding
+                    # the pixel to obtain a 3×3 grid to account
+                    # for the size of the boat and length
+                    # of the sampling tubes...
+                    idxs = [idx - CartesianIndex(ii,jj) for ii in -1:1 for jj in -1:1 if checkbounds(Bool, Xs, (idx - CartesianIndex(ii,jj)))]
+
+                    for idx_good in idxs
+                        if IsInbounds[idx_good]
+                            push!(idx_match_hsi, idx_good)
+                            push!(idx_match_df, i)
+                        end
                     end
+
+                    # if IsInbounds[idx]
+                    #     # push!(df_features_out, Data[:,idx])
+                    #     # push!(df_targets_out, df[i,:])
+                    #     push!(idx_match_hsi, idx)
+                    #     push!(idx_match_df, i)
+                    # end
                 end
             end
         end
@@ -128,14 +143,33 @@ function get_all_matching_data(collection, collection_id)
 end
 
 
+
+# use CDOM as a proxy to filter values, keeping 95% of data
+function idx_filter(df_features, df_targets)
+    q_low = quantile(df_targets.CDOM, 0.025)
+    q_high = quantile(df_targets.CDOM, 0.975)
+    idx_filtered = findall(df_targets.CDOM .>= q_low .&& df_targets.CDOM .<= q_high)
+    return idx_filtered
+end
+
 # process 11-23
 df_features_11_23_1, df_targets_11_23_1 = get_all_matching_data("11-23", "Scotty_1")
+# filter to sane values
+# idx_filtered = idx_filter(df_features_11_23_1, df_targets_11_23_1)
+# df_features_11_23_1 = df_features_11_23_1[idx_filtered,:]
+# df_targets_11_23_1 = df_targets_11_23_1[idx_filtered,:]
+
 @assert nrow(df_features_11_23_1) == nrow(df_targets_11_23_1)
 CSV.write(joinpath(outpath, "11-23", "Targets_1.csv"), df_targets_11_23_1)
 CSV.write(joinpath(outpath, "11-23", "Features_1.csv"), df_features_11_23_1)
 
 
 df_features_11_23_2, df_targets_11_23_2 = get_all_matching_data("11-23", "Scotty_2")
+# filter to sane values
+# idx_filtered = idx_filter(df_features_11_23_2, df_targets_11_23_2)
+# df_features_11_23_2 = df_features_11_23_2[idx_filtered,:]
+# df_targets_11_23_2 = df_targets_11_23_2[idx_filtered,:]
+
 @assert nrow(df_features_11_23_1) == nrow(df_targets_11_23_1)
 CSV.write(joinpath(outpath, "11-23", "Targets_2.csv"), df_targets_11_23_2)
 CSV.write(joinpath(outpath, "11-23", "Features_2.csv"), df_features_11_23_2)
@@ -143,22 +177,43 @@ CSV.write(joinpath(outpath, "11-23", "Features_2.csv"), df_features_11_23_2)
 
 # process 12-09
 df_features_12_09_1, df_targets_12_09_1 = get_all_matching_data("12-09", "NoDye_1")
+# filter to sane values
+# idx_filtered = idx_filter(df_features_12_09_1, df_targets_12_09_1)
+# df_features_12_09_1 = df_features_12_09_1[idx_filtered,:]
+# df_targets_12_09_1 = df_targets_12_09_1[idx_filtered,:]
+
 @assert nrow(df_features_12_09_1) == nrow(df_targets_12_09_1)
 CSV.write(joinpath(outpath, "12-09", "Targets_1.csv"), df_targets_12_09_1)
 CSV.write(joinpath(outpath, "12-09", "Features_1.csv"), df_features_12_09_1)
 
 df_features_12_09_2, df_targets_12_09_2 = get_all_matching_data("12-09", "NoDye_2")
+# filter to sane values
+# idx_filtered = idx_filter(df_features_12_09_2, df_targets_12_09_2)
+# df_features_12_09_2 = df_features_12_09_2[idx_filtered,:]
+# df_targets_12_09_2 = df_targets_12_09_2[idx_filtered,:]
+
 @assert nrow(df_features_12_09_2) == nrow(df_targets_12_09_2)
 CSV.write(joinpath(outpath, "12-09", "Targets_2.csv"), df_targets_12_09_2)
 CSV.write(joinpath(outpath, "12-09", "Features_2.csv"), df_features_12_09_2)
 
+
 # process 12-10
 df_features_12_10_1, df_targets_12_10_1 = get_all_matching_data("12-10", "NoDye_1")
+# filter to sane values
+# idx_filtered = idx_filter(df_features_12_10_1, df_targets_12_10_1)
+# df_features_12_10_1 = df_features_12_10_1[idx_filtered,:]
+# df_targets_12_10_1 = df_targets_12_10_1[idx_filtered,:]
+
 @assert nrow(df_features_12_10_1) == nrow(df_targets_12_10_1)
 CSV.write(joinpath(outpath, "12-10", "Targets_1.csv"), df_targets_12_10_1)
 CSV.write(joinpath(outpath, "12-10", "Features_1.csv"), df_features_12_10_1)
 
 df_features_12_10_2, df_targets_12_10_2 = get_all_matching_data("12-10", "NoDye_2")
+# filter to sane values
+# idx_filtered = idx_filter(df_features_12_10_2, df_targets_12_10_2)
+# df_features_12_10_2 = df_features_12_10_2[idx_filtered,:]
+# df_targets_12_10_2 = df_targets_12_10_2[idx_filtered,:]
+
 @assert nrow(df_features_12_10_2) == nrow(df_targets_12_10_2)
 CSV.write(joinpath(outpath, "12-10", "Targets_2.csv"), df_targets_12_10_2)
 CSV.write(joinpath(outpath, "12-10", "Features_2.csv"), df_features_12_10_2)
