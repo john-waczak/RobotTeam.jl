@@ -29,7 +29,8 @@ function process_image(img;α=10.0,β=0.0)
 end
 
 
-function getRGB(hsi::HyperspectralImage; λred=630.0, λgreen=532.0, λblue=465.0)
+# function getRGB(hsi::HyperspectralImage; λred=630.0, λgreen=532.0, λblue=465.0)
+function getRGB(hsi::HyperspectralImage; λred=640.0, λgreen=550.0, λblue=460.0)
     λs = hsi.λs
     idx_r = argmin(abs.(λs .- λred))
     idx_g = argmin(abs.(λs .- λgreen))
@@ -37,7 +38,9 @@ function getRGB(hsi::HyperspectralImage; λred=630.0, λgreen=532.0, λblue=465.
 
     img = hsi.Datacube[[idx_r, idx_g, idx_b], :, :]
 
-    imgp = process_image(img)
+    # imgp = process_image(img)
+
+    imgp = img
 
     return colorview(RGB, imgp)
 end

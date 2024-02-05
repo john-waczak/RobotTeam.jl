@@ -129,17 +129,27 @@ function get_all_matching_data(collection, collection_id)
     end
 
 
-    data_features = DataFrame[]
-    data_targets = DataFrame[]
-
+    # data_features = DataFrame[]
+    # data_targets = DataFrame[]
 
     @showprogress for h5_path in collections[collection][collection_id]
+        fname = split(split(h5_path, "/")[end], ".")[1]
+
         df_f, df_t = find_matching_data(h5_path, df)
-        push!(data_features, df_f)
-        push!(data_targets, df_t)
+
+        savepath = joinpath(outpath, collection, collection_id)
+        if !ispath(savepath)
+            mkpath(savepath)
+        end
+
+        CSV.write(joinpath(savepath, fname*"__Features.csv"), df_f)
+        CSV.write(joinpath(savepath, fname*"__Targets.csv"), df_t)
+
+        # push!(data_features, df_f)
+        # push!(data_targets, df_t)
     end
 
-    return vcat(data_features...), vcat(data_targets...)
+    # return vcat(data_features...), vcat(data_targets...)
 end
 
 
@@ -152,106 +162,119 @@ function idx_filter(df_features, df_targets)
     return idx_filtered
 end
 
-# process 11-23
-df_features_11_23_1, df_targets_11_23_1 = get_all_matching_data("11-23", "Scotty_1")
-# filter to sane values
+
+
+get_all_matching_data("11-23", "Scotty_1")
+get_all_matching_data("11-23", "Scotty_2")
+get_all_matching_data("12-09", "NoDye_1")
+get_all_matching_data("12-09", "NoDye_2")
+get_all_matching_data("12-10", "NoDye_1")
+get_all_matching_data("12-10", "NoDye_2")
+
+
+
+
+
+# # process 11-23
+# df_features_11_23_1, df_targets_11_23_1 = get_all_matching_data("11-23", "Scotty_1")
+# # filter to sane values
 # idx_filtered = idx_filter(df_features_11_23_1, df_targets_11_23_1)
 # df_features_11_23_1 = df_features_11_23_1[idx_filtered,:]
 # df_targets_11_23_1 = df_targets_11_23_1[idx_filtered,:]
 
-@assert nrow(df_features_11_23_1) == nrow(df_targets_11_23_1)
-CSV.write(joinpath(outpath, "11-23", "Targets_1.csv"), df_targets_11_23_1)
-CSV.write(joinpath(outpath, "11-23", "Features_1.csv"), df_features_11_23_1)
+# @assert nrow(df_features_11_23_1) == nrow(df_targets_11_23_1)
+# CSV.write(joinpath(outpath, "11-23", "Targets_1.csv"), df_targets_11_23_1)
+# CSV.write(joinpath(outpath, "11-23", "Features_1.csv"), df_features_11_23_1)
 
 
-df_features_11_23_2, df_targets_11_23_2 = get_all_matching_data("11-23", "Scotty_2")
-# filter to sane values
+# df_features_11_23_2, df_targets_11_23_2 = get_all_matching_data("11-23", "Scotty_2")
+# # filter to sane values
 # idx_filtered = idx_filter(df_features_11_23_2, df_targets_11_23_2)
 # df_features_11_23_2 = df_features_11_23_2[idx_filtered,:]
 # df_targets_11_23_2 = df_targets_11_23_2[idx_filtered,:]
 
-@assert nrow(df_features_11_23_1) == nrow(df_targets_11_23_1)
-CSV.write(joinpath(outpath, "11-23", "Targets_2.csv"), df_targets_11_23_2)
-CSV.write(joinpath(outpath, "11-23", "Features_2.csv"), df_features_11_23_2)
+# @assert nrow(df_features_11_23_1) == nrow(df_targets_11_23_1)
+# CSV.write(joinpath(outpath, "11-23", "Targets_2.csv"), df_targets_11_23_2)
+# CSV.write(joinpath(outpath, "11-23", "Features_2.csv"), df_features_11_23_2)
 
 
-# process 12-09
-df_features_12_09_1, df_targets_12_09_1 = get_all_matching_data("12-09", "NoDye_1")
-# filter to sane values
+# # process 12-09
+# df_features_12_09_1, df_targets_12_09_1 = get_all_matching_data("12-09", "NoDye_1")
+# # filter to sane values
 # idx_filtered = idx_filter(df_features_12_09_1, df_targets_12_09_1)
 # df_features_12_09_1 = df_features_12_09_1[idx_filtered,:]
 # df_targets_12_09_1 = df_targets_12_09_1[idx_filtered,:]
 
-@assert nrow(df_features_12_09_1) == nrow(df_targets_12_09_1)
-CSV.write(joinpath(outpath, "12-09", "Targets_1.csv"), df_targets_12_09_1)
-CSV.write(joinpath(outpath, "12-09", "Features_1.csv"), df_features_12_09_1)
+# @assert nrow(df_features_12_09_1) == nrow(df_targets_12_09_1)
+# CSV.write(joinpath(outpath, "12-09", "Targets_1.csv"), df_targets_12_09_1)
+# CSV.write(joinpath(outpath, "12-09", "Features_1.csv"), df_features_12_09_1)
 
-df_features_12_09_2, df_targets_12_09_2 = get_all_matching_data("12-09", "NoDye_2")
-# filter to sane values
+# df_features_12_09_2, df_targets_12_09_2 = get_all_matching_data("12-09", "NoDye_2")
+# # filter to sane values
 # idx_filtered = idx_filter(df_features_12_09_2, df_targets_12_09_2)
 # df_features_12_09_2 = df_features_12_09_2[idx_filtered,:]
 # df_targets_12_09_2 = df_targets_12_09_2[idx_filtered,:]
 
-@assert nrow(df_features_12_09_2) == nrow(df_targets_12_09_2)
-CSV.write(joinpath(outpath, "12-09", "Targets_2.csv"), df_targets_12_09_2)
-CSV.write(joinpath(outpath, "12-09", "Features_2.csv"), df_features_12_09_2)
+# @assert nrow(df_features_12_09_2) == nrow(df_targets_12_09_2)
+# CSV.write(joinpath(outpath, "12-09", "Targets_2.csv"), df_targets_12_09_2)
+# CSV.write(joinpath(outpath, "12-09", "Features_2.csv"), df_features_12_09_2)
 
 
-# process 12-10
-df_features_12_10_1, df_targets_12_10_1 = get_all_matching_data("12-10", "NoDye_1")
-# filter to sane values
+# # process 12-10
+# df_features_12_10_1, df_targets_12_10_1 = get_all_matching_data("12-10", "NoDye_1")
+# # filter to sane values
 # idx_filtered = idx_filter(df_features_12_10_1, df_targets_12_10_1)
 # df_features_12_10_1 = df_features_12_10_1[idx_filtered,:]
 # df_targets_12_10_1 = df_targets_12_10_1[idx_filtered,:]
 
-@assert nrow(df_features_12_10_1) == nrow(df_targets_12_10_1)
-CSV.write(joinpath(outpath, "12-10", "Targets_1.csv"), df_targets_12_10_1)
-CSV.write(joinpath(outpath, "12-10", "Features_1.csv"), df_features_12_10_1)
+# @assert nrow(df_features_12_10_1) == nrow(df_targets_12_10_1)
+# CSV.write(joinpath(outpath, "12-10", "Targets_1.csv"), df_targets_12_10_1)
+# CSV.write(joinpath(outpath, "12-10", "Features_1.csv"), df_features_12_10_1)
 
-df_features_12_10_2, df_targets_12_10_2 = get_all_matching_data("12-10", "NoDye_2")
-# filter to sane values
+# df_features_12_10_2, df_targets_12_10_2 = get_all_matching_data("12-10", "NoDye_2")
+# # filter to sane values
 # idx_filtered = idx_filter(df_features_12_10_2, df_targets_12_10_2)
 # df_features_12_10_2 = df_features_12_10_2[idx_filtered,:]
 # df_targets_12_10_2 = df_targets_12_10_2[idx_filtered,:]
 
-@assert nrow(df_features_12_10_2) == nrow(df_targets_12_10_2)
-CSV.write(joinpath(outpath, "12-10", "Targets_2.csv"), df_targets_12_10_2)
-CSV.write(joinpath(outpath, "12-10", "Features_2.csv"), df_features_12_10_2)
+# @assert nrow(df_features_12_10_2) == nrow(df_targets_12_10_2)
+# CSV.write(joinpath(outpath, "12-10", "Targets_2.csv"), df_targets_12_10_2)
+# CSV.write(joinpath(outpath, "12-10", "Features_2.csv"), df_features_12_10_2)
 
 
-# join together for full dataset
-df_features_full_1 = vcat(
-    df_features_11_23_1,
-    df_features_12_09_1,
-    df_features_12_10_1,
-)
+# # join together for full dataset
+# df_features_full_1 = vcat(
+#     df_features_11_23_1,
+#     df_features_12_09_1,
+#     df_features_12_10_1,
+# )
 
-df_targets_full_1 = vcat(
-    df_targets_11_23_1,
-    df_targets_12_09_1,
-    df_targets_12_10_1,
-)
+# df_targets_full_1 = vcat(
+#     df_targets_11_23_1,
+#     df_targets_12_09_1,
+#     df_targets_12_10_1,
+# )
 
-@assert nrow(df_features_full_1) == nrow(df_targets_full_1)
-CSV.write(joinpath(outpath, "Full", "Targets_1.csv"), df_targets_full_1)
-CSV.write(joinpath(outpath, "Full", "Features_1.csv"), df_features_full_1)
+# @assert nrow(df_features_full_1) == nrow(df_targets_full_1)
+# CSV.write(joinpath(outpath, "Full", "Targets_1.csv"), df_targets_full_1)
+# CSV.write(joinpath(outpath, "Full", "Features_1.csv"), df_features_full_1)
 
 
 
-df_features_full_2 = vcat(
-    df_features_11_23_2,
-    df_features_12_09_2,
-    df_features_12_10_2,
-)
+# df_features_full_2 = vcat(
+#     df_features_11_23_2,
+#     df_features_12_09_2,
+#     df_features_12_10_2,
+# )
 
-df_targets_full_2 = vcat(
-    df_targets_11_23_2,
-    df_targets_12_09_2,
-    df_targets_12_10_2,
-)
+# df_targets_full_2 = vcat(
+#     df_targets_11_23_2,
+#     df_targets_12_09_2,
+#     df_targets_12_10_2,
+# )
 
-@assert nrow(df_features_full_2) == nrow(df_targets_full_2)
-CSV.write(joinpath(outpath, "Full", "Targets_2.csv"), df_targets_full_2)
-CSV.write(joinpath(outpath, "Full", "Features_2.csv"), df_features_full_2)
+# @assert nrow(df_features_full_2) == nrow(df_targets_full_2)
+# CSV.write(joinpath(outpath, "Full", "Targets_2.csv"), df_targets_full_2)
+# CSV.write(joinpath(outpath, "Full", "Features_2.csv"), df_features_full_2)
 
 

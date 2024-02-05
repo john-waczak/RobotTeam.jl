@@ -75,6 +75,8 @@ function HyperspectralImage(
     Pitch = Matrix{Float64}(undef, nsamples, nscanlines);
     Heading = Matrix{Float64}(undef, nsamples, nscanlines);
 
+    Altitude = Matrix{Float64}(undef, nsamples, nscanlines);
+
     ViewingAngle = Matrix{Float64}(undef, nsamples, nscanlines);
 
     SolarAzimuth = Matrix{Float64}(undef, nsamples, nscanlines);
@@ -86,7 +88,7 @@ function HyperspectralImage(
     Datacube, h, p = read_envi_file(bilpath, bilhdr)
 
     # 3. Generate Coordinates
-    generateCoords!(X,Longitudes, Latitudes, Roll,Pitch,Heading,Times,ViewingAngle,SolarAzimuth,SolarElevation,SolarZenith,start_time,fdata;θ_view=θ_view,z_ground=z_ground,isflipped=isflipped)
+    generateCoords!(X,Longitudes, Latitudes, Roll,Pitch,Heading,Altitude,Times,ViewingAngle,SolarAzimuth,SolarElevation,SolarZenith,start_time,fdata;θ_view=θ_view,z_ground=z_ground,isflipped=isflipped)
 
 
     return HyperspectralImage(
@@ -102,6 +104,7 @@ function HyperspectralImage(
         Roll,
         Pitch,
         Heading,
+        Altitude,
         ViewingAngle,
         SolarAzimuth,
         SolarElevation,

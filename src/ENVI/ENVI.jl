@@ -393,6 +393,8 @@ struct HyperspectralImage{T0, T1<:AbstractArray}
     Pitch::Matrix{T0}
     Heading::Matrix{T0}
 
+    Altitude::Matrix{T0}
+
     # Camera Geometry
     ViewAngle::Matrix{T0}
 

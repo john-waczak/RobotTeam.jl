@@ -116,6 +116,7 @@ function resample_datacube_fast(hsi::HyperspectralImage; Δx=0.10)
         "roll",
         "pitch",
         "heading",
+        "altitude",
         "view_angle",
         "solar_azimuth",
         "solar_elevation",
@@ -127,6 +128,7 @@ function resample_datacube_fast(hsi::HyperspectralImage; Δx=0.10)
         "Roll",
         "Pitch",
         "Heading",
+        "Altitude",
         "Viewing Angle",
         "Solar Azimuth",
         "Solar Elevation",
@@ -144,6 +146,7 @@ function resample_datacube_fast(hsi::HyperspectralImage; Δx=0.10)
     k_roll = findfirst(varnames .== "roll")
     k_pitch = findfirst(varnames .== "pitch")
     k_heading = findfirst(varnames .== "heading")
+    k_altitude = findfirst(varnames .== "altitude")
     k_view = findfirst(varnames .== "view_angle")
     k_az = findfirst(varnames .== "solar_azimuth")
     k_el = findfirst(varnames .== "solar_elevation")
@@ -168,6 +171,9 @@ function resample_datacube_fast(hsi::HyperspectralImage; Δx=0.10)
 
         # copy Heading
         @inbounds Data[k_heading, ij] = mean(hsi.Heading[idx_dict[ij]])
+
+        # copy Altitude
+        @inbounds Data[k_altitude, ij] = mean(hsi.Altitude[idx_dict[ij]])
 
         # copy Viewing Angle
         @inbounds Data[k_view, ij] = mean(hsi.ViewAngle[idx_dict[ij]])
@@ -221,6 +227,7 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
         "roll",
         "pitch",
         "heading",
+        "altitude",
         "view_angle",
         "solar_azimuth",
         "solar_elevation",
@@ -295,6 +302,7 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
         "Roll",
         "Pitch",
         "Heading",
+        "Altitude",
         "Viewing Angle",
         "Solar Azimuth",
         "Solar Elevation",
@@ -374,6 +382,7 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
     k_roll = findfirst(varnames .== "roll")
     k_pitch = findfirst(varnames .== "pitch")
     k_heading = findfirst(varnames .== "heading")
+    k_altitude = findfirst(varnames .== "altitude")
     k_view = findfirst(varnames .== "view_angle")
     k_az = findfirst(varnames .== "solar_azimuth")
     k_el = findfirst(varnames .== "solar_elevation")
@@ -398,6 +407,9 @@ function resample_datacube(hsi::HyperspectralImage; Δx=0.10)
 
         # copy Heading
         @inbounds Data[k_heading, ij] = mean(hsi.Heading[idx_dict[ij]])
+
+        # copy Heading
+        @inbounds Data[k_altitude, ij] = mean(hsi.Altitude[idx_dict[ij]])
 
         # copy Viewing Angle
         @inbounds Data[k_view, ij] = mean(hsi.ViewAngle[idx_dict[ij]])

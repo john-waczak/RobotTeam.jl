@@ -49,6 +49,7 @@ function generateCoords!(
     Roll,
     Pitch,
     Heading,
+    Altitude,
     Times,
     ViewAngle,
     SolarAzimuth,
@@ -88,6 +89,7 @@ function generateCoords!(
     ϕ = @view fdata.rolls[:]
     θ = @view fdata.pitches[:]
     ψ = @view fdata.headings[:]
+    alt = @view fdata.zs[:]
 
     # read in times
     ts = @view fdata.times[:]
@@ -112,7 +114,8 @@ function generateCoords!(
         # compute scale factor
         #s = (droneCoords[3,line]-z_ground)/focal_length
         #s = (droneCoords[3,line]-z_ground)/(focal_length*cos(θ[line])))
-        s = (droneCoords[3,line]-z_ground)/(focal_length*cos(θ[line])*cos(ϕ[line]))  # need to also include roll
+        #s = (droneCoords[3,line]-z_ground)/(focal_length*cos(θ[line])*cos(ϕ[line]))  # need to also include roll
+        s = (droneCoords[3,line]-z_ground)*sqrt(1+tan(θ[line])^2 + tan(ϕ[line])^2)/focal_length  # need to also include roll
 
         # compute object coords in UTM
         # T_n_E is conversion from navigation frame to earth frame
@@ -126,6 +129,7 @@ function generateCoords!(
         Roll[:,line] .= ϕ[line]
         Pitch[:,line] .= θ[line]
         Heading[:,line] .= ψ[line]
+        Altitude[:,line] .= alt[line]
 
         # update pixel times
         Times[:,line] .= ts[line]
